@@ -1,0 +1,170 @@
+root = true
+
+# ==============================================================================
+# Regole Generali
+# ==============================================================================
+[*]
+indent_style = space
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.xml]
+indent_size = 2
+
+# ==============================================================================
+# C# & VB: Convenzioni Base e Formattazione
+# ==============================================================================
+[*.{cs,vb}]
+indent_size = 4
+tab_width = 4
+end_of_line = crlf
+
+# Ordinamento Usings
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Gestione Modificatori e Membri
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:error
+dotnet_style_readonly_field = true:error
+dotnet_code_quality_unused_parameters = all:warning
+
+# Sintassi Espressioni Moderne
+dotnet_style_null_propagation = true:error
+dotnet_style_coalesce_expression = true:error
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:error
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_prefer_compound_assignment = true:suggestion
+dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
+dotnet_style_prefer_simplified_interpolation = true:suggestion
+
+# ==============================================================================
+# C# Moderno (.NET 10 / C# 13 & 14)
+# ==============================================================================
+[*.cs]
+# File-scoped namespaces (standard moderno)
+csharp_style_namespace_declarations = file_scoped:error
+
+# Collection Expressions [1, 2, 3] (evita allocazioni array/list inutili)
+csharp_style_prefer_collection_expression = true:error
+
+# Costruttori primari
+csharp_style_prefer_primary_constructors = true:suggestion
+
+# Pattern matching & Switch expressions
+csharp_style_prefer_pattern_matching = true:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+
+# Uso di static per funzioni locali e lambda (previene allocazione di closure nell'heap)
+csharp_prefer_static_local_function = true:error
+csharp_prefer_static_anonymous_function = true:error
+
+# Gestione risorse
+csharp_prefer_simple_using_statement = true:error
+csharp_prefer_simple_default_expression = true:suggestion
+
+# Preferenze var
+csharp_style_var_for_built_in_types = false:silent
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:silent
+
+# Blocchi e parentesi
+csharp_prefer_braces = true:silent
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# ==============================================================================
+# PERFORMANCE: Regole Native .NET SDK (CA18xx)
+# ==============================================================================
+# Evita chiamate LINQ inutili su collezioni indicizzate (.Count != 0 invece di .Any())
+dotnet_diagnostic.CA1860.severity = error
+
+# Evita allocazioni di array vuoti -> Array.Empty<T>() o []
+dotnet_diagnostic.CA1825.severity = error
+
+# Usa string.Contains(char) invece di string.Contains(string)
+dotnet_diagnostic.CA1847.severity = error
+
+# Usa SearchValues<T> per ricerche veloci (.NET 8+)
+dotnet_diagnostic.CA1870.severity = error
+
+# Preferisci tipi concreti per migliorare devirtualizzazione e inline
+dotnet_diagnostic.CA1859.severity = warning
+
+# Evita duplicati di ToLower()/ToUpper() nei confronti stringhe (usa StringComparison)
+dotnet_diagnostic.CA1862.severity = error
+
+# Usa 'string.Concat' o Span al posto di 'StringBuilder' per poche concatenazioni
+dotnet_diagnostic.CA1834.severity = error
+
+# Usa TryGetValue invece di ContainsKey seguito da indicizzatore
+dotnet_diagnostic.CA1854.severity = error
+
+# Evita allocazione di lambda/delegate riutilizzando funzioni statiche
+dotnet_diagnostic.CA1822.severity = warning
+
+# Non passare parametri params come array allocati
+dotnet_diagnostic.CA1861.severity = error
+
+# Evita il boxing di tipi enum/valore
+dotnet_diagnostic.CA1806.severity = warning
+
+# ==============================================================================
+# PERFORMANCE & ZERO-ALLOC: Meziantou & ErrorProne Analyzer
+# ==============================================================================
+# Sostituisci Substring con ReadOnlySpan<char>
+dotnet_diagnostic.MA0001.severity = warning
+dotnet_diagnostic.MA0002.severity = warning
+
+# Evita Boxing involontario
+dotnet_diagnostic.MA0076.severity = error
+
+# Ottimizzazione struct: passaggio per 'in' o 'ref readonly' se > 16 byte
+dotnet_diagnostic.EPC11.severity = error
+dotnet_diagnostic.EPC12.severity = error
+
+# Obbliga l'uso di 'readonly struct' dove possibile per evitare copie difensive
+dotnet_diagnostic.EPS01.severity = warning
+
+# ==============================================================================
+# THREADING & ASYNC (.NET Best Practices)
+# ==============================================================================
+# Blocca chiamate sincrone bloccanti (.Result, .Wait(), .GetAwaiter().GetResult())
+dotnet_diagnostic.VSTHRD002.severity = error
+dotnet_diagnostic.VSTHRD104.severity = error
+
+# Avvisa se ValueTask viene riutilizzato impropriamente
+dotnet_diagnostic.CA2012.severity = error
+
+# ==============================================================================
+# Naming Styles
+# ==============================================================================
+dotnet_naming_rule.interfaces_should_be_ipascalcase.severity = error
+dotnet_naming_rule.interfaces_should_be_ipascalcase.symbols = interfaces
+dotnet_naming_rule.interfaces_should_be_ipascalcase.style = ipascalcase
+
+dotnet_naming_rule.types_should_be_pascalcase.severity = error
+dotnet_naming_rule.types_should_be_pascalcase.symbols = types_and_namespaces
+dotnet_naming_rule.types_should_be_pascalcase.style = pascalcase
+
+dotnet_naming_rule.private_fields_should_be__camelcase.severity = error
+dotnet_naming_rule.private_fields_should_be__camelcase.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be__camelcase.style = _camelcase
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.types_and_namespaces.applicable_kinds = class, struct, enum, delegate
+dotnet_naming_symbols.types_and_namespaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected, private_protected
+
+dotnet_naming_style.pascalcase.capitalization = pascal_case
+dotnet_naming_style.ipascalcase.required_prefix = I
+dotnet_naming_style.ipascalcase.capitalization = pascal_case
+dotnet_naming_style._camelcase.required_prefix = _
+dotnet_naming_style._camelcase.capitalization = camel_case

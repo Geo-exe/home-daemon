@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="tests/HomeDaemon.ArchitectureTests/HomeDaemon.ArchitectureTests.csproj" />
+  <Project Path="tests/HomeDaemon.IntegrationTests/HomeDaemon.IntegrationTests.csproj" />
+  <Project Path="tests/HomeDaemon.UnitTests/HomeDaemon.UnitTests.csproj" />
+  <Project Path="src/HomeDaemon.Api/HomeDaemon.Api.csproj" />
+  <Project Path="src/HomeDaemon.Application/HomeDaemon.Application.csproj" />
+  <Project Path="src/HomeDaemon.DataAccess/HomeDaemon.DataAccess.csproj" />
+  <Project Path="src/HomeDaemon.Domain/HomeDaemon.Domain.csproj" />
+</Solution>
