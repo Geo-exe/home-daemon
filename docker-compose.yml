@@ -1,0 +1,49 @@
+name: home-daemon
+
+# Runs the published image and keeps it up to date. All configuration and every
+# secret come from the local .env file (see .env.example); nothing is baked into
+# the image. Start with:  docker compose up -d
+
+services:
+  home-daemon:
+    image: ghcr.io/geo-exe/home-daemon:latest
+    container_name: home-daemon
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      TZ: ${TZ:-Europe/Rome}
+      # The database lives on the persistent volume; this single instance applies
+      # the EF Core migrations on startup.
+      ConnectionStrings__HomeDaemon: "Data Source=/data/home-daemon.db"
+      Database__ApplyMigrationsOnStartup: "true"
+      # Backups are written to their own volume, away from the database.
+      Backup__Enabled: "true"
+      Backup__Directory: /backups
+    volumes:
+      - home-daemon-data:/data
+      - home-daemon-backups:/backups
+    # Bound to loopback only: terminate TLS and authenticate at a reverse proxy,
+    # VPN or firewall in front of the container.
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  # Watches ghcr.io/geo-exe/home-daemon and recreates the API container when a
+  # new :latest image is published. The positional argument limits watchtower to
+  # the home-daemon container.
+  watchtower:
+    image: ghcr.io/nicholas-fedor/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      TZ: ${TZ:-Europe/Rome}
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL:-3600}
+    command: home-daemon
+
+volumes:
+  home-daemon-data:
+  home-daemon-backups:
