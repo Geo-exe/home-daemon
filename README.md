@@ -1,18 +1,24 @@
 # HomeDaemon
 
-Modular home automation backend for the **Chores** module, built as a .NET 10 modular
-monolith hosted in a single LXC container. It keeps Home Assistant to-do lists in sync with
-a deterministic, calendar-aware scheduler and records completion history.
+**A self-hosted household app for chores and budgeting.**
 
-This repository implements the technical plan in
-[`analysis/technical_analysis.md`](analysis/technical_analysis.md) (Italian). The code,
-identifiers, tests and comments are in English.
+HomeDaemon brings two everyday household modules together in one web app:
+
+- **Chores** — schedule recurring chores around household availability, assign them to
+  members, track completions, and sync tasks with Home Assistant to-do lists.
+- **Budget** — record household income, expenses, and transfers; organize expenses with
+  categories and subcategories; and review budget summaries.
+
+HomeDaemon runs as a .NET 10 modular monolith, typically as a single Docker container on an
+LXC host, and stores its state in SQLite. See
+[Running the container](#running-the-container) for deployment instructions, or
+[Running locally](#running-locally) to build it from source.
 
 ## Architecture
 
 ```text
 HomeDaemon.Api          ASP.NET Core host: endpoints, auth, workers, composition root
-HomeDaemon.Application  CQRS handlers, recurrence, scheduler, availability, sync planning
+HomeDaemon.Application  CQRS handlers (chores, budget), recurrence, scheduler, availability, sync planning
 HomeDaemon.DataAccess   EF Core + SQLite, migrations, Home Assistant HTTP adapter, backup
 HomeDaemon.Domain       Entities, enums and value types; no external dependencies
 HomeDaemon.Web          React + TypeScript single-page app, published as the API's static content
@@ -60,6 +66,24 @@ is stored as sortable ticks so SQLite can order and range-compare it.
 - The scheduler is pure and deterministic: hard constraints first, then a documented score
   (`SchedulingOptions`) with stable tie-breakers.
 
+## Budget
+
+The budget module splits the household's shared expenses in proportion to each member's
+income and keeps a running balance that real transfers settle.
+
+- **Incomes** — net monthly income per member. The yearly proportion is derived from these
+  values, so entering them once sets every member's share for the year.
+- **Expenses** — each shared expense records an amount, a date, the paying member and a
+  category (optionally a subcategory). Categories and subcategories are household-wide and are
+  managed under the budget settings.
+- **Transfers** — actual money movements between members. A transfer carries its own settlement
+  year, which may differ from the payment date, and reduces the outstanding balance.
+- **Summary** — per year, it shows total income, total expenses, each member's share, what they
+  paid, what they owe and the resulting balance, plus the totals grouped by category.
+
+Only members flagged as budget participants can be selected as the payer. Access is scoped to
+the household resolved from the session, so one household never sees another's data.
+
 ## Running locally
 
 ```bash
@@ -92,7 +116,8 @@ one origin and the session cookie stays first-party.
   the household planning horizon with per-member load, manual move/reassign, unlock and a
   "recalculate now" action that reports the run's outcome, the completion history, which is
   cursor-paginated and rendered with virtual scrolling so only the visible rows exist in the DOM,
-  and settings for the household, rooms, people and accounts. The accounts tab is only shown to
+  the budget summary with its income, expenses and transfers screens, and settings for the
+  household, rooms, people, accounts and budget categories. The accounts tab is only shown to
   administrators, and the server enforces the same rule.
 - **Route-level code splitting** keeps the first download small: sign-in loads immediately, the
   other screens are fetched when they are first opened.
