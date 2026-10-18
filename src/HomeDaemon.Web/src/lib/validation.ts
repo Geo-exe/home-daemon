@@ -195,6 +195,25 @@ export type MemberFormValues = z.input<typeof memberFormSchema>
 export type HouseholdFormValues = z.input<typeof householdFormSchema>
 export type AccountFormValues = z.input<typeof accountFormSchema>
 
+/**
+ * The first-run setup form. It collects only what is needed to create the household and reuses
+ * the household settings messages so the wording stays consistent.
+ */
+export const householdOnboardingSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'settings.household.validation.nameRequired')
+    .max(200, 'settings.household.validation.nameTooLong'),
+  timeZoneId: z.string().trim().min(1, 'settings.household.validation.timeZoneRequired'),
+  currency: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{3}$/, 'settings.household.validation.currencyInvalid'),
+})
+
+export type HouseholdOnboardingValues = z.input<typeof householdOnboardingSchema>
+
 // ------------------------------------------------------------------- budget
 
 const budgetAmount = z

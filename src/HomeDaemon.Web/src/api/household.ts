@@ -17,6 +17,13 @@ export interface HouseholdWriteModel {
   maxChoreMinutesPerWeekendDay: number | null
 }
 
+/** The first-run setup only sends what it collects; the API fills in the rest. */
+export interface HouseholdCreateModel {
+  name: string
+  timeZoneId: string
+  currency: string
+}
+
 export interface RoomWriteModel {
   name: string
   sortOrder: number
@@ -34,6 +41,11 @@ export interface MemberWriteModel {
 
 export function getHousehold(signal?: AbortSignal): Promise<Household> {
   return apiGet<Household>('/household', signal)
+}
+
+/** Creates the single household. The API refuses a second one. */
+export function createHousehold(model: HouseholdCreateModel): Promise<Household> {
+  return apiPost<Household>('/households', model)
 }
 
 export function updateHousehold(model: HouseholdWriteModel): Promise<Household> {

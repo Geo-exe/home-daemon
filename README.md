@@ -355,7 +355,18 @@ docker compose run --rm \
   home-daemon create-admin
 ```
 
-Sign in with `POST /api/v1/auth/login`, and see the current account at `GET /api/v1/auth/me`.
+### First-run setup
+
+Sign in with the administrator account. After the mandatory password change the web app opens
+**Create your household**, a short form for the household name, time zone and currency. Saving
+it takes you to **Settings → People**, where you add the people who take part in the household;
+chores and the budget both need them. Everything else has sensible defaults and can be changed
+later under **Settings**.
+
+The household is created through `POST /api/v1/households`, which requires the administrator
+role. A standard account that reaches the app before the household exists is told to ask an
+administrator, and the API refuses the same request with `403`. The household can only be
+created once; the endpoint answers `400` if one already exists.
 
 ## Health checks
 
