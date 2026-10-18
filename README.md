@@ -157,6 +157,20 @@ dotnet-ef migrations add <Name> --project src/HomeDaemon.DataAccess --startup-pr
 EF migrations are generated code; analyzer/style enforcement is disabled for them via
 `.editorconfig`.
 
+## Continuous integration (pull requests)
+
+Every pull request targeting `main` runs
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml): a single **Build and test** job
+restores, builds and tests the .NET solution, then installs the web dependencies from the
+lockfile and runs `npm run verify` (type-check, lint, unit tests and production build).
+
+To make it mandatory, add a branch ruleset for `main` under **GitHub → Settings → Rules →
+Rulesets** and require the **Build and test** status check before merging. The workflow only
+runs the checks; the merge requirement lives in the repository settings.
+
+Pull requests are pre-filled by
+[`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
+
 ## Continuous delivery and container image
 
 Pushing a **release tag** whose commit is on `main` runs
