@@ -108,15 +108,12 @@ a:hover {
 }
 
 .app__brand-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
+  /* Fixed brand colour: the white outline must stay legible in both colour schemes. */
+  color: var(--color-brand);
+  flex: 0 0 auto;
 }
 
 .app__account {

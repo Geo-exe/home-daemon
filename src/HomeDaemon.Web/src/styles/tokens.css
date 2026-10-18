@@ -14,6 +14,9 @@
   --color-primary-strong: #4338ca;
   --color-on-primary: #ffffff;
 
+  /* The brand mark keeps this colour in both light and dark mode. */
+  --color-brand: #4f46e5;
+
   --color-danger: #dc2626;
   --color-danger-soft: #fef2f2;
   --color-success: #15803d;

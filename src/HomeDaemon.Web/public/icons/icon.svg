@@ -1,4 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="HomeDaemon">
+  <!-- A house with the little daemon that keeps it running. -->
   <rect width="512" height="512" rx="112" fill="#4f46e5" />
-  <path d="M148 266 L226 344 L364 196" fill="none" stroke="#ffffff" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" />
+  <g fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128 248 L256 144 L384 248" />
+    <path d="M168 248 L168 372 L344 372 L344 248" />
+  </g>
+  <g fill="#ffffff">
+    <path d="M240 270 L222 290 L208 232 Z" />
+    <path d="M272 270 L290 290 L304 232 Z" />
+    <circle cx="256" cy="308" r="42" />
+  </g>
+  <g fill="#4f46e5">
+    <circle cx="240" cy="300" r="8" />
+    <circle cx="272" cy="300" r="8" />
+  </g>
+  <path d="M238 328 q18 14 36 0" fill="none" stroke="#4f46e5" stroke-width="9" stroke-linecap="round" />
 </svg>

@@ -12,11 +12,11 @@ import { Spinner } from '../components/Spinner'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { describedBy } from '../lib/aria'
 import { errorMessageKey, fieldProblems } from '../lib/errors'
+import { frequencyOptions, intervalLabelKey } from '../lib/recurrence'
 import {
   assignmentPolicies,
   choreFormSchema,
   issuesToFieldErrors,
-  recurrenceFrequencies,
   recurrenceModes,
   type ChoreFormValues,
 } from '../lib/validation'
@@ -277,7 +277,7 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
               value={values.frequency}
               onChange={(event) => update('frequency', event.target.value as ChoreFormValues['frequency'])}
             >
-              {recurrenceFrequencies.map((frequency) => (
+              {frequencyOptions(values.frequency).map((frequency) => (
                 <option key={frequency} value={frequency}>
                   {t(`enums.frequency.${frequency}`)}
                 </option>
@@ -287,7 +287,7 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
         </div>
 
         <div className="form__row">
-          <Field label={t('chores.field.interval')} htmlFor="chore-interval" error={errorFor('interval')}>
+          <Field label={t(intervalLabelKey(values.frequency))} htmlFor="chore-interval" error={errorFor('interval')}>
             <input
               id="chore-interval"
               className="input"

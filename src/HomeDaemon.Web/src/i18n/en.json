@@ -86,7 +86,10 @@
       "effortWeight": "Effort weight",
       "effortWeightHint": "Optional. Not every minute costs the same.",
       "frequency": "Repeats",
-      "interval": "Repeat every",
+      "intervalDays": "Repeat every (days)",
+      "intervalWeeks": "Repeat every (weeks)",
+      "intervalMonths": "Repeat every (months)",
+      "intervalYears": "Repeat every (years)",
       "mode": "Counting",
       "anchorDate": "Anchored on",
       "anchorDateHint": "Used by fixed schedules and as the creation reference.",
@@ -148,13 +151,13 @@
       "unscheduledReason": "Reason"
     },
     "recurrence": {
-      "daily": "Every day",
+      "daily": "Daily",
       "everyDays": "Every {{count}} days",
-      "weekly": "Every week",
+      "weekly": "Weekly",
       "everyWeeks": "Every {{count}} weeks",
-      "monthly": "Every month",
+      "monthly": "Monthly",
       "everyMonths": "Every {{count}} months",
-      "yearly": "Every year",
+      "yearly": "Yearly",
       "everyYears": "Every {{count}} years",
       "fixedDays": "Every {{count}} days",
       "rollOnCompletion": "Counts from the day it is done",
@@ -355,11 +358,11 @@
   },
   "enums": {
     "frequency": {
-      "Daily": "Every day",
-      "Weekly": "Every week",
-      "Monthly": "Every month",
-      "Yearly": "Every year",
-      "FixedIntervalDays": "Fixed interval of days"
+      "Daily": "Daily",
+      "Weekly": "Weekly",
+      "Monthly": "Monthly",
+      "Yearly": "Yearly",
+      "FixedIntervalDays": "Every N days"
     },
     "mode": {
       "Dynamic": "Counts from completion",

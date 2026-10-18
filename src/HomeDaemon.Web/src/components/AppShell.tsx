@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '../auth/session-context'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
+import { BrandMark } from './BrandMark'
 
 export function AppShell() {
   const { t } = useTranslation()
@@ -30,9 +31,7 @@ export function AppShell() {
       <header className="app__header">
         <div className="app__bar">
           <NavLink to="/chores" className="app__brand">
-            <span className="app__brand-mark" aria-hidden="true">
-              HD
-            </span>
+            <BrandMark />
             <span className="app__brand-name">{t('app.name')}</span>
           </NavLink>
 
