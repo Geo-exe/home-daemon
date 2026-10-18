@@ -58,3 +58,7 @@ nunit-*.xml
 
 # Personal Folders
 analysis/
+
+# Local runtime state (SQLite database and backups produced by the app/compose)
+data/
+backups/

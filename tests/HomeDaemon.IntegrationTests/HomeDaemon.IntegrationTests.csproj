@@ -1,3 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\HomeDaemon.Api\HomeDaemon.Api.csproj" />
+    <ProjectReference Include="..\..\src\HomeDaemon.Application\HomeDaemon.Application.csproj" />
+    <ProjectReference Include="..\..\src\HomeDaemon.DataAccess\HomeDaemon.DataAccess.csproj" />
+    <ProjectReference Include="..\..\src\HomeDaemon.Domain\HomeDaemon.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+
 </Project>

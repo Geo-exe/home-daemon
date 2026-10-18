@@ -6,12 +6,22 @@
 
     <ItemGroup>
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.13" />
     </ItemGroup>
 
     <ItemGroup>
         <!-- Analyzer Performance (src) -->
         <PackageVersion Include="Meziantou.Analyzer" Version="3.0.303" />
-        <PackageVersion Include="ZeroAlloc.Analyzers" Version="1.11.2" />
+        <PackageVersion Include="ZeroAlloc.Analyzers" Version="1.4.0" />
         <PackageVersion Include="ErrorProne.NET.Structs" Version="0.1.2" />
         <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
 
@@ -28,7 +38,5 @@
 
         <!-- Integration Testing -->
         <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
-        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
-        <PackageVersion Include="Respawn" Version="7.0.0" />
     </ItemGroup>
 </Project>

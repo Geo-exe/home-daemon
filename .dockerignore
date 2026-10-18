@@ -1,0 +1,29 @@
+# The build context only needs src/ plus the build manifests (see Dockerfile).
+
+# Host build artifacts (they may target a different OS/architecture than the image)
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/TestResults/
+
+# Not needed inside the image
+**/tests/
+analysis/
+data/
+backups/
+README.md
+
+# VCS and CI
+.git/
+.github/
+
+# Container tooling and local secrets
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+.env
+.env.*
+!.env.example

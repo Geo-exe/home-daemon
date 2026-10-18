@@ -168,3 +168,21 @@ dotnet_naming_style.ipascalcase.required_prefix = I
 dotnet_naming_style.ipascalcase.capitalization = pascal_case
 dotnet_naming_style._camelcase.required_prefix = _
 dotnet_naming_style._camelcase.capitalization = camel_case
+# ==============================================================================
+# EF Core migrations are generated code and are not hand-maintained.
+# Analyzer and style enforcement is disabled for them.
+# ==============================================================================
+[**/Migrations/*.cs]
+dotnet_analyzer_diagnostic.severity = none
+dotnet_analyzer_diagnostic.category-Design.severity = none
+dotnet_analyzer_diagnostic.category-Globalization.severity = none
+dotnet_analyzer_diagnostic.category-Performance.severity = none
+dotnet_analyzer_diagnostic.category-Reliability.severity = none
+dotnet_analyzer_diagnostic.category-Usage.severity = none
+dotnet_diagnostic.CA1062.severity = none
+dotnet_diagnostic.CA1812.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.MA0048.severity = none
+dotnet_diagnostic.MA0051.severity = none

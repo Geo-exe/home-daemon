@@ -1,41 +1,101 @@
+using System.Text.Json.Serialization;
+using HomeDaemon.Api;
+using HomeDaemon.Api.Auth;
+using HomeDaemon.Api.Endpoints;
+using HomeDaemon.Api.Workers;
+using HomeDaemon.Application;
+using HomeDaemon.Application.Sync;
+using HomeDaemon.DataAccess;
+using HomeDaemon.DataAccess.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddDataAccess(builder.Configuration);
+
+builder.Services.Configure<ApiKeyOptions>(builder.Configuration.GetSection("ApiKey"));
+builder.Services.Configure<RecalculationScheduleOptions>(builder.Configuration.GetSection("Recalculation"));
+builder.Services.Configure<BackupScheduleOptions>(builder.Configuration.GetSection("Backup"));
+builder.Services.Configure<TodoSyncOptions>(builder.Configuration.GetSection("TodoSync"));
+
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 10;
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddRoles<IdentityRole<Guid>>()
+.AddEntityFrameworkStores<HomeDaemonDbContext>()
+.AddApiEndpoints()
+.AddDefaultTokenProviders();
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = ApiKeyDefaults.PolicyScheme;
+        options.DefaultAuthenticateScheme = ApiKeyDefaults.PolicyScheme;
+        options.DefaultChallengeScheme = ApiKeyDefaults.PolicyScheme;
+    })
+    .AddPolicyScheme(ApiKeyDefaults.PolicyScheme, "API key or bearer token", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+            context.Request.Headers.ContainsKey(ApiKeyOptions.HeaderName)
+                ? ApiKeyDefaults.Scheme
+                : IdentityConstants.BearerScheme;
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyDefaults.Scheme, static _ => { })
+    .AddBearerToken(IdentityConstants.BearerScheme);
+
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+builder.Services.AddHealthChecks().AddDbContextCheck<HomeDaemonDbContext>("sqlite");
+
+builder.Services.AddHostedService<ScheduleRunWorker>();
+builder.Services.AddHostedService<TodoSyncWorker>();
+builder.Services.AddHostedService<NightlySchedulingWorker>();
+builder.Services.AddHostedService<DatabaseBackupWorker>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
 }
 
-app.UseHttpsRedirection();
+app.MapHealthEndpoints();
+app.MapGroup("/api/v1/auth").WithTags("Auth").MapIdentityApi<ApplicationUser>().AllowAnonymous();
 
-var summaries = new[]
+app.MapHouseholdEndpoints();
+app.MapChoreEndpoints();
+app.MapPlannerEndpoints();
+app.MapSchedulingEndpoints();
+app.MapHomeAssistantEndpoints();
+
+if (builder.Configuration.GetValue("Database:ApplyMigrationsOnStartup", false))
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    await ApplyMigrationsAsync(app).ConfigureAwait(false);
+}
 
-app.MapGet("/weatherforecast", () =>
+await app.RunAsync().ConfigureAwait(false);
+
+static async Task ApplyMigrationsAsync(WebApplication app)
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<HomeDaemonDbContext>();
+    await db.Database.MigrateAsync().ConfigureAwait(false);
 }
