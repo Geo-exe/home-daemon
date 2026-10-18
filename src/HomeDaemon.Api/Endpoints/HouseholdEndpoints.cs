@@ -1,3 +1,4 @@
+using HomeDaemon.Api.Auth;
 using HomeDaemon.Application.Households;
 
 namespace HomeDaemon.Api.Endpoints;
@@ -15,8 +16,11 @@ public static class HouseholdEndpoints
 
     private static void MapHousehold(RouteGroupBuilder group)
     {
+        // Creating the household is a one-off administrative step: ordinary users reach the
+        // app only once it exists, and the first-run setup runs as the administrator.
         group.MapPost("/households", async (CreateHouseholdRequest request, CreateHouseholdHandler handler, CancellationToken cancellationToken) =>
-            Results.Created("/api/v1/household", await handler.HandleAsync(new CreateHouseholdCommand(request.Name, request.TimeZoneId), cancellationToken).ConfigureAwait(false)));
+            Results.Created("/api/v1/household", await handler.HandleAsync(new CreateHouseholdCommand(request.Name, request.TimeZoneId, request.Currency), cancellationToken).ConfigureAwait(false)))
+            .RequireAuthorization(AccountRoles.AdminPolicy);
 
         group.MapGet("/household", async (GetHouseholdHandler handler, CancellationToken cancellationToken) =>
             Results.Ok(await handler.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false)));

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { choresQueryKey } from '../api/chores'
 import {
+  createHousehold,
   createMember,
   createRoom,
   deleteMember,
@@ -11,6 +12,7 @@ import {
   updateHousehold,
   updateMember,
   updateRoom,
+  type HouseholdCreateModel,
   type HouseholdWriteModel,
   type MemberWriteModel,
   type RoomWriteModel,
@@ -25,6 +27,21 @@ function useInvalidate(keys: readonly (readonly unknown[])[]) {
       await queryClient.invalidateQueries({ queryKey: key })
     }
   }
+}
+
+export function useCreateHousehold() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (model: HouseholdCreateModel) => createHousehold(model),
+    onSuccess: (household) => {
+      // Publish the created household right away, so the first-run gate stops showing its
+      // setup screen without waiting for a refetch.
+      queryClient.setQueryData(householdQueryKey, household)
+      void queryClient.invalidateQueries({ queryKey: membersQueryKey })
+      void queryClient.invalidateQueries({ queryKey: roomsQueryKey })
+    },
+  })
 }
 
 export function useUpdateHousehold() {

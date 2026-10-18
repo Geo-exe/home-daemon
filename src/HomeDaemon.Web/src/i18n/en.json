@@ -64,6 +64,19 @@
     "needsLowercase": "Add at least one lower-case letter.",
     "needsDigit": "Add at least one digit."
   },
+  "onboarding": {
+    "title": "Create your household",
+    "subtitle": "Set up the shared household. You can change these settings later.",
+    "adminRequired": "An administrator has to create the household before anyone can use the app.",
+    "name": "Household name",
+    "timeZone": "Time zone",
+    "timeZoneHint": "Used for calendar dates, the daily window and job times.",
+    "currency": "Currency",
+    "currencyHint": "ISO 4217 code, for example EUR. Used by the budget module.",
+    "submit": "Create household",
+    "submitting": "Creating…",
+    "nextSteps": "Next, add the people of the household under Settings → People. Chores and the budget both need them."
+  },
   "chores": {
     "title": "Chores",
     "subtitle_one": "{{count}} chore",

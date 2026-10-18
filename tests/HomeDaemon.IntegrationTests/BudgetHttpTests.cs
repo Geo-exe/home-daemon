@@ -78,7 +78,7 @@ public sealed class BudgetHttpTests
         });
         expenseResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var expense = (await expenseResponse.Content.ReadFromJsonAsync<BudgetExpenseResponse>())!;
+        var expense = (await expenseResponse.Content.ReadFromJsonAsync<BudgetExpenseResponse>(TestContext.Current.CancellationToken))!;
         expense.Date.Should().Be(new DateOnly(2026, 6, 15));
         expense.AmountMinor.Should().Be(10000);
         expense.PaidByMemberName.Should().Be("Budget Alice");
