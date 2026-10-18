@@ -116,6 +116,8 @@ if (Array.IndexOf(args, createAdminCommand) >= 0)
 }
 
 app.UseExceptionHandler();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
 {
@@ -138,6 +140,11 @@ app.MapPlannerEndpoints();
 app.MapSchedulingEndpoints();
 app.MapHomeAssistantEndpoints();
 
+// Single-page app fallback. Only paths that are not the API or a probe get the app shell, so an
+// unknown API route still answers 404 instead of a page. It is anonymous on purpose: the login
+// screen has to load before there is any session.
+app.MapFallback(ServeWebAppAsync).AllowAnonymous();
+
 if (builder.Configuration.GetValue("Database:ApplyMigrationsOnStartup", false))
 {
     await ApplyMigrationsAsync(app).ConfigureAwait(false);
@@ -150,6 +157,36 @@ static async Task ApplyMigrationsAsync(WebApplication app)
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<HomeDaemonDbContext>();
     await db.Database.MigrateAsync().ConfigureAwait(false);
+}
+
+static async Task ServeWebAppAsync(HttpContext context)
+{
+    ArgumentNullException.ThrowIfNull(context);
+
+    var path = context.Request.Path;
+    if (path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    var webRoot = context.RequestServices.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+    var indexFile = webRoot is null ? null : Path.Combine(webRoot, "index.html");
+
+    if (indexFile is null || !File.Exists(indexFile))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        context.Response.ContentType = "text/plain; charset=utf-8";
+        await context.Response
+            .WriteAsync("The web app has not been built. Run 'npm run build' in src/HomeDaemon.Web.")
+            .ConfigureAwait(false);
+
+        return;
+    }
+
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(indexFile).ConfigureAwait(false);
 }
 
 static async Task CreateAdminAsync(WebApplication app)

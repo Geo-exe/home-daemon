@@ -1,0 +1,387 @@
+{
+  "app": {
+    "name": "HomeDaemon",
+    "loading": "Loading…",
+    "offline": "You are offline. Changing chores requires a connection.",
+    "offlineReadOnly": "Showing the last loaded data. Some actions are unavailable while offline."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "deleting": "Deleting…",
+    "retry": "Try again",
+    "close": "Close",
+    "search": "Search",
+    "back": "Back",
+    "confirm": "Confirm",
+    "unknown": "Unknown",
+    "yes": "Yes",
+    "no": "No",
+    "required": "Required"
+  },
+  "nav": {
+    "label": "Modules",
+    "chores": "Chores",
+    "planner": "Planner",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "account": {
+    "signedInAs": "Signed in as {{email}}",
+    "changePassword": "Change password",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Sign in to manage the household chores.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordRequired": "Enter your password.",
+    "invalidCredentials": "The email or password is not correct."
+  },
+  "changePassword": {
+    "title": "Choose a new password",
+    "subtitle": "This account must change its password before it can be used.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Repeat the new password",
+    "submit": "Change password",
+    "submitting": "Changing…",
+    "currentRequired": "Enter your current password.",
+    "mismatch": "The two passwords do not match.",
+    "success": "Your password has been changed."
+  },
+  "password": {
+    "tooShort": "Use at least 10 characters.",
+    "needsUppercase": "Add at least one upper-case letter.",
+    "needsLowercase": "Add at least one lower-case letter.",
+    "needsDigit": "Add at least one digit."
+  },
+  "chores": {
+    "title": "Chores",
+    "subtitle_one": "{{count}} chore",
+    "subtitle_other": "{{count}} chores",
+    "new": "New chore",
+    "searchLabel": "Search chores",
+    "searchPlaceholder": "Search by title",
+    "empty": "No chores yet. Create the first one.",
+    "emptyFiltered": "No chore matches the current filters.",
+    "filter": {
+      "all": "All",
+      "active": "Active",
+      "paused": "Paused",
+      "allRooms": "All rooms"
+    },
+    "field": {
+      "title": "Title",
+      "description": "Description",
+      "room": "Room",
+      "noRoom": "No room",
+      "duration": "Estimated minutes",
+      "effortWeight": "Effort weight",
+      "effortWeightHint": "Optional. Not every minute costs the same.",
+      "frequency": "Repeats",
+      "interval": "Repeat every",
+      "mode": "Counting",
+      "anchorDate": "Anchored on",
+      "anchorDateHint": "Used by fixed schedules and as the creation reference.",
+      "assignment": "Assignment",
+      "assignee": "Assigned to",
+      "preferSameRoom": "Group with the same room",
+      "active": "Active",
+      "activeHint": "Paused chores are not planned."
+    },
+    "validation": {
+      "titleRequired": "Give the chore a title.",
+      "titleTooLong": "Keep the title under 200 characters.",
+      "descriptionTooLong": "Keep the description under 2000 characters.",
+      "durationInvalid": "Enter a whole number of minutes.",
+      "durationPositive": "Use at least one minute.",
+      "durationTooLong": "A chore cannot last more than a day.",
+      "effortWeightInvalid": "Enter a number greater than or equal to zero.",
+      "frequencyRequired": "Choose how often the chore repeats.",
+      "intervalInvalid": "Enter a whole number.",
+      "intervalRange": "Use a number between 1 and 365.",
+      "modeRequired": "Choose how the next date is counted.",
+      "anchorDateInvalid": "Use a date.",
+      "assignmentRequired": "Choose who can do the chore.",
+      "assigneeRequired": "Pick the person for a single-person chore."
+    },
+    "state": {
+      "Unplanned": "Not planned yet",
+      "Scheduled": "Planned",
+      "Unscheduled": "Could not be placed",
+      "Paused": "Paused"
+    },
+    "dates": {
+      "lastCompleted": "Last done",
+      "nextOccurrence": "Next due (by rule)",
+      "nextDue": "Planned for",
+      "plannedMember": "Planned for"
+    },
+    "actions": {
+      "complete": "Done",
+      "edit": "Edit",
+      "delete": "Delete",
+      "pause": "Pause",
+      "resume": "Resume",
+      "open": "Open",
+      "create": "Create chore",
+      "creating": "Creating…"
+    },
+    "detail": {
+      "backToList": "Back to chores",
+      "editTitle": "Edit chore",
+      "newTitle": "New chore",
+      "description": "Description",
+      "noDescription": "No description.",
+      "recurrence": "Rules",
+      "schedule": "Planning",
+      "history": "Recent completions",
+      "noHistory": "Nothing recorded yet.",
+      "locked": "Locked by a manual change",
+      "unscheduledReason": "Reason"
+    },
+    "recurrence": {
+      "daily": "Every day",
+      "everyDays": "Every {{count}} days",
+      "weekly": "Every week",
+      "everyWeeks": "Every {{count}} weeks",
+      "monthly": "Every month",
+      "everyMonths": "Every {{count}} months",
+      "yearly": "Every year",
+      "everyYears": "Every {{count}} years",
+      "fixedDays": "Every {{count}} days",
+      "rollOnCompletion": "Counts from the day it is done",
+      "anchored": "Keeps a fixed schedule"
+    },
+    "complete": {
+      "title": "Mark as done",
+      "date": "Done on",
+      "dateHint": "Defaults to today in the household time zone.",
+      "submit": "Mark as done",
+      "submitting": "Saving…",
+      "success": "Completion recorded.",
+      "alreadyRecorded": "This chore was already recorded for that day."
+    },
+    "delete": {
+      "title": "Delete “{{title}}”?",
+      "body": "The chore disappears from the catalog and the plan, but its completion history is kept. You can restore it later.",
+      "confirm": "Delete chore"
+    }
+  },
+  "planner": {
+    "title": "Planner",
+    "subtitle_one": "{{count}} day",
+    "subtitle_other": "{{count}} days",
+    "previous": "Previous days",
+    "today": "Today",
+    "next": "Next days",
+    "recalculate": "Recalculate now",
+    "recalculating": "Recalculating…",
+    "runSucceeded": "Recalculation finished: {{scheduled}} planned, {{unscheduled}} not placed.",
+    "runFailed": "The recalculation failed.",
+    "runInterrupted": "The recalculation is still running. Refresh in a moment to see the result.",
+    "calendarUnavailable": "Calendar availability is unavailable, so these figures come from the daily window alone.",
+    "empty": "Nothing is planned in this window.",
+    "emptyDay": "Nothing planned.",
+    "load": {
+      "title": "Load",
+      "window": "Window",
+      "calendar": "Busy",
+      "planned": "Chores",
+      "free": "Free",
+      "allDayBlocked": "Away all day",
+      "minutes": "{{count}} min"
+    },
+    "unscheduled": {
+      "title": "Could not be placed",
+      "empty": "Every chore in this window was placed.",
+      "reason": "Reason"
+    },
+    "occurrence": {
+      "locked": "Locked",
+      "move": "Move",
+      "unlock": "Unlock"
+    },
+    "move": {
+      "title": "Move or reassign",
+      "date": "New date",
+      "member": "Assigned to",
+      "hint": "This locks the occurrence until it is completed or unlocked.",
+      "invalid": "Choose a date and a person."
+    }
+  },
+  "history": {
+    "title": "History",
+    "subtitle": "Every recorded completion, newest first.",
+    "filters": {
+      "chore": "Chore",
+      "allChores": "All chores",
+      "member": "Person",
+      "allMembers": "Everyone",
+      "source": "Origin",
+      "allSources": "Any origin",
+      "from": "From",
+      "to": "To",
+      "clear": "Clear filters"
+    },
+    "empty": "No completion matches these filters.",
+    "loadingMore": "Loading more…",
+    "end": "End of the history.",
+    "unattributed": "Not attributed",
+    "recordedAt": "Recorded {{moment}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Household, rooms, people and accounts.",
+    "tabs": {
+      "household": "Household",
+      "rooms": "Rooms",
+      "members": "People",
+      "accounts": "Accounts"
+    },
+    "household": {
+      "title": "Household",
+      "name": "Name",
+      "timeZone": "Time zone",
+      "timeZoneHint": "Used for calendar dates, the daily window and job times.",
+      "planningHorizon": "Planning horizon (days)",
+      "planningHorizonHint": "How far ahead the planner looks for chores.",
+      "windowStart": "Daily window starts",
+      "windowEnd": "Daily window ends",
+      "maxWeekday": "Max minutes on weekdays",
+      "maxWeekend": "Max minutes on weekend days",
+      "maxHint": "Optional. Leave empty to use the whole daily window.",
+      "save": "Save settings",
+      "saving": "Saving…",
+      "saved": "Settings saved.",
+      "validation": {
+        "nameRequired": "Give the household a name.",
+        "nameTooLong": "Keep the name under 200 characters.",
+        "timeZoneRequired": "Enter a time zone, for example Europe/Rome.",
+        "horizonInvalid": "Enter a whole number of days.",
+        "horizonRange": "Use a number between 1 and 365.",
+        "timeInvalid": "Use a time such as 08:00.",
+        "windowOrder": "The window must end after it starts.",
+        "capInvalid": "Enter a whole number of minutes, or leave it empty."
+      }
+    },
+    "rooms": {
+      "title": "Rooms",
+      "subtitle": "Rooms group chores and guide the planner.",
+      "add": "Add room",
+      "editTitle": "Edit room",
+      "newTitle": "New room",
+      "empty": "No rooms yet.",
+      "name": "Name",
+      "sortOrder": "Order",
+      "delete": "Delete",
+      "deleteTitle": "Delete “{{name}}”?",
+      "deleteBody": "A room can only be deleted while no chore uses it.",
+      "validation": {
+        "nameRequired": "Give the room a name.",
+        "nameTooLong": "Keep the name under 200 characters.",
+        "orderInvalid": "Enter a whole number.",
+        "orderRange": "Use a number between 0 and 9999."
+      }
+    },
+    "members": {
+      "title": "People",
+      "subtitle": "People who can receive chores.",
+      "add": "Add person",
+      "editTitle": "Edit person",
+      "newTitle": "New person",
+      "empty": "No people yet.",
+      "assignable": "Can receive chores",
+      "notAssignable": "Not assignable",
+      "homeAssistant": "Home Assistant",
+      "name": "Name",
+      "color": "Colour",
+      "colorHint": "Optional, for example #4F46E5.",
+      "todoList": "To-do list entity",
+      "todoListHint": "For example todo.alice. Planned chores are written here.",
+      "personEntity": "Person entity",
+      "calendars": "Calendar entities",
+      "calendarsHint": "One per line, for example calendar.alice_work.",
+      "delete": "Delete",
+      "deleteTitle": "Delete “{{name}}”?",
+      "deleteBody": "Only a person with no chores and no completion history can be deleted.",
+      "validation": {
+        "nameRequired": "Give the person a name.",
+        "nameTooLong": "Keep the name under 200 characters.",
+        "colorInvalid": "Use a hex colour such as #4F46E5.",
+        "entityTooLong": "Keep the entity identifier under 200 characters.",
+        "calendarsTooLong": "That is too many calendars."
+      }
+    },
+    "accounts": {
+      "title": "Accounts",
+      "subtitle": "Everyone signs in with their own account.",
+      "adminOnly": "Only administrators can manage accounts.",
+      "add": "Add account",
+      "editTitle": "Edit account",
+      "newTitle": "New account",
+      "empty": "No accounts yet.",
+      "email": "Email",
+      "displayName": "Display name",
+      "linkedMember": "Linked person",
+      "noLink": "Not linked",
+      "administrator": "Administrator",
+      "you": "This is you",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Deactivated",
+      "mustChange": "Must change password",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "resetPassword": "Reset password",
+      "loadMore": "Load more",
+      "temporaryPassword": "Temporary password",
+      "temporaryPasswordHint": "Shown once. Hand it to the person; it must be changed at the first sign-in.",
+      "copy": "Copy",
+      "copied": "Copied.",
+      "dismiss": "Dismiss",
+      "validation": {
+        "emailInvalid": "Enter a valid email address.",
+        "displayNameTooLong": "Keep the display name under 200 characters."
+      }
+    }
+  },
+  "enums": {
+    "frequency": {
+      "Daily": "Every day",
+      "Weekly": "Every week",
+      "Monthly": "Every month",
+      "Yearly": "Every year",
+      "FixedIntervalDays": "Fixed interval of days"
+    },
+    "mode": {
+      "Dynamic": "Counts from completion",
+      "Anchored": "Fixed schedule"
+    },
+    "assignment": {
+      "Both": "Anyone",
+      "SpecificMember": "One person",
+      "Alternating": "Alternating"
+    },
+    "source": {
+      "Manual": "Added in the app",
+      "HomeAssistant": "Completed in Home Assistant",
+      "Api": "Recorded by a service"
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "notFound": "This page or item does not exist.",
+    "offline": "The server cannot be reached. Check your connection.",
+    "sessionExpired": "Your session ended. Sign in again.",
+    "conflict": "That change conflicts with the current state.",
+    "forbidden": "You do not have access to this action."
+  }
+}

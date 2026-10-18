@@ -15,6 +15,7 @@ HomeDaemon.Api          ASP.NET Core host: endpoints, auth, workers, composition
 HomeDaemon.Application  CQRS handlers, recurrence, scheduler, availability, sync planning
 HomeDaemon.DataAccess   EF Core + SQLite, migrations, Home Assistant HTTP adapter, backup
 HomeDaemon.Domain       Entities, enums and value types; no external dependencies
+HomeDaemon.Web          React + TypeScript single-page app, published as the API's static content
 ```
 
 Direct project references:
@@ -70,9 +71,57 @@ dotnet test --project tests/HomeDaemon.ArchitectureTests/HomeDaemon.Architecture
 
 # run the API (Development applies migrations on startup)
 dotnet run --project src/HomeDaemon.Api
+
+# run the web app against the API (proxies /api and /health to it)
+cd src/HomeDaemon.Web
+npm install
+npm run dev
 ```
 
 `dotnet test` uses the new Microsoft.Testing.Platform runner, configured in `global.json`.
+
+## Web app
+
+`src/HomeDaemon.Web` is a React + TypeScript single-page app built with Vite. It consumes the
+same REST API and, in production, is published as the API's static content so the browser sees
+one origin and the session cookie stays first-party.
+
+- **Server state** is handled with TanStack Query; **forms** are validated with Zod, mirroring
+  the server rules while the server stays authoritative.
+- **Screens:** the chores catalog (create, edit, pause, soft delete, complete), the planner over
+  the household planning horizon with per-member load, manual move/reassign, unlock and a
+  "recalculate now" action that reports the run's outcome, the completion history, which is
+  cursor-paginated and rendered with virtual scrolling so only the visible rows exist in the DOM,
+  and settings for the household, rooms, people and accounts. The accounts tab is only shown to
+  administrators, and the server enforces the same rule.
+- **Route-level code splitting** keeps the first download small: sign-in loads immediately, the
+  other screens are fetched when they are first opened.
+- **Strings** all come from `src/i18n` through i18next. The app ships in English; adding a
+  language means adding one resource file, with no component changes.
+- **The session** lives in an `HttpOnly` cookie. The client only caches the antiforgery token
+  in memory and sends it in `X-CSRF-TOKEN` on mutations.
+- **The PWA** is installable and caches the app shell and static assets only. API responses are
+  never cached and writes are never queued: when the device is offline the app says so and
+  disables the actions that change chores.
+
+```bash
+cd src/HomeDaemon.Web
+
+npm run dev        # development server with the API proxy
+npm run verify     # type-check, lint, unit tests and production build
+npm run build      # production bundle in dist/
+```
+
+To reproduce the production layout locally:
+
+```bash
+cd src/HomeDaemon.Web && npm run build
+rm -rf ../HomeDaemon.Api/wwwroot && cp -R dist ../HomeDaemon.Api/wwwroot
+cd ../.. && dotnet run --project src/HomeDaemon.Api
+```
+
+`src/HomeDaemon.Api/wwwroot` is build output and is not committed; the container image produces
+it in its own build stage.
 
 ### Configuration
 
@@ -115,11 +164,13 @@ Pushing a **release tag** whose commit is on `main` runs
 
 1. **Build and test** — the tagged commit must be an ancestor of `main`; the solution is
    restored, built in `Release` and all three test projects run.
-2. **Publish container image** — [`Dockerfile`](Dockerfile) is built for `linux/amd64` and
+2. **Verify the web app** — dependencies are installed from the lockfile and
+   `npm run verify` runs the type-check, lint, unit tests and production build.
+3. **Publish container image** — [`Dockerfile`](Dockerfile) is built for `linux/amd64` and
    `linux/arm64` and pushed to GitHub Container Registry (GHCR) as
    `ghcr.io/geo-exe/home-daemon`, tagged with the full version, `major.minor`, `major`,
    `latest` (non-prerelease tags only) and `sha-<short>`.
-3. **Create GitHub release** — a release with auto-generated notes.
+4. **Create GitHub release** — a release with auto-generated notes.
 
 ```bash
 git switch main

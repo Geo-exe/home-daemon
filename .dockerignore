@@ -9,6 +9,11 @@
 **/*.user
 **/TestResults/
 
+# Frontend dependencies and build output: the image builds them in its own stage.
+**/node_modules/
+src/HomeDaemon.Web/dist/
+src/HomeDaemon.Web/dev-dist/
+
 # Not needed inside the image
 **/tests/
 analysis/

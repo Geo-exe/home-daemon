@@ -1,6 +1,21 @@
 # syntax=docker/dockerfile:1
 
 # ---------------------------------------------------------------------------
+# Frontend stage
+# ---------------------------------------------------------------------------
+# The SPA is built here and later published as the API's static content, so the container
+# serves the app and the API from a single origin.
+FROM node:24-alpine AS web
+WORKDIR /web
+
+# Install from the lockfile first, so this layer is cached until dependencies change.
+COPY src/HomeDaemon.Web/package.json src/HomeDaemon.Web/package-lock.json ./
+RUN npm ci
+
+COPY src/HomeDaemon.Web/ ./
+RUN npm run build
+
+# ---------------------------------------------------------------------------
 # Build stage
 # ---------------------------------------------------------------------------
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -18,6 +33,7 @@ COPY src/HomeDaemon.Api/HomeDaemon.Api.csproj src/HomeDaemon.Api/
 RUN dotnet restore src/HomeDaemon.Api/HomeDaemon.Api.csproj
 
 COPY src/ src/
+COPY --from=web /web/dist/ src/HomeDaemon.Api/wwwroot/
 RUN dotnet publish src/HomeDaemon.Api/HomeDaemon.Api.csproj \
     --configuration Release \
     --no-restore \

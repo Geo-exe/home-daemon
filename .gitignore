@@ -62,3 +62,7 @@ analysis/
 # Local runtime state (SQLite database and backups produced by the app/compose)
 data/
 backups/
+
+# The single-page app is built into the API's static content by the Dockerfile; a local
+# build is not source.
+src/HomeDaemon.Api/wwwroot/
