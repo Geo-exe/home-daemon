@@ -1,6 +1,10 @@
+using System.Security.Claims;
 using HomeDaemon.Application.Chores;
+using HomeDaemon.Application.Common;
 using HomeDaemon.Application.Households;
+using HomeDaemon.DataAccess.Persistence;
 using HomeDaemon.Domain.Chores;
+using Microsoft.AspNetCore.Identity;
 
 namespace HomeDaemon.Api.Endpoints;
 
@@ -90,10 +94,27 @@ public static class ChoreEndpoints
         group.MapPost("/{choreId:guid}/restore", async (Guid choreId, RestoreChoreHandler handler, CancellationToken cancellationToken) =>
             Results.Ok(await handler.HandleAsync(new RestoreChoreCommand(choreId), cancellationToken).ConfigureAwait(false)));
 
-        group.MapPost("/{choreId:guid}/complete", async (Guid choreId, CompleteChoreRequest request, CompleteChoreHandler handler, CancellationToken cancellationToken) =>
-            Results.Ok(await handler.HandleAsync(
-                new CompleteChoreCommand(choreId, request.CompletedDate, request.CompletedByMemberId, CompletionSource.Manual, request.IdempotencyKey),
-                cancellationToken).ConfigureAwait(false)));
+        group.MapPost("/{choreId:guid}/complete", async (
+            Guid choreId,
+            CompleteChoreRequest request,
+            ClaimsPrincipal principal,
+            UserManager<ApplicationUser> users,
+            CompleteChoreHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var account = await users.GetUserAsync(principal).ConfigureAwait(false)
+                ?? throw new EntityNotFoundException("The current account no longer exists.");
+
+            return Results.Ok(await handler.HandleAsync(
+                new CompleteChoreCommand(
+                    choreId,
+                    request.CompletedDate,
+                    account.HouseholdMemberId,
+                    CompletionSource.Manual,
+                    request.IdempotencyKey,
+                    account.Id),
+                cancellationToken).ConfigureAwait(false));
+        });
     }
 
     private static void MapHistory(RouteGroupBuilder group)

@@ -31,6 +31,7 @@ namespace HomeDaemon.DataAccess.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
@@ -40,10 +41,21 @@ namespace HomeDaemon.DataAccess.Persistence.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("HouseholdMemberId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("LockoutEnd")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("MustChangePassword")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("NormalizedEmail")
@@ -74,6 +86,10 @@ namespace HomeDaemon.DataAccess.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("HouseholdMemberId")
+                        .IsUnique()
+                        .HasFilter("\"HouseholdMemberId\" IS NOT NULL");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -201,6 +217,9 @@ namespace HomeDaemon.DataAccess.Persistence.Migrations
                     b.Property<Guid?>("CompletedByMemberId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateOnly>("CompletedDate")
                         .HasColumnType("TEXT");
 
@@ -221,12 +240,12 @@ namespace HomeDaemon.DataAccess.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HouseholdId");
-
                     b.HasIndex("ChoreDefinitionId", "CompletedDate");
 
                     b.HasIndex("ChoreDefinitionId", "IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("HouseholdId", "CompletedDate", "RecordedAtUtc");
 
                     b.ToTable("completion_history", (string)null);
                 });

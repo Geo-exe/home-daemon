@@ -27,4 +27,10 @@ public sealed class CompletionHistory
     public string? IdempotencyKey { get; set; }
 
     public Guid? CompletedByMemberId { get; set; }
+
+    /// <summary>
+    /// Login account that recorded a manual completion. Null for Home Assistant callbacks,
+    /// which carry no user identity.
+    /// </summary>
+    public Guid? CompletedByUserId { get; set; }
 }

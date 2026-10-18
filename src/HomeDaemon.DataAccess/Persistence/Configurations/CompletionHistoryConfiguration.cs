@@ -27,5 +27,8 @@ public sealed class CompletionHistoryConfiguration : IEntityTypeConfiguration<Co
 
         builder.HasIndex(history => new { history.ChoreDefinitionId, history.CompletedDate });
         builder.HasIndex(history => new { history.ChoreDefinitionId, history.IdempotencyKey }).IsUnique();
+
+        // Supports the household-scoped, newest-first history pages.
+        builder.HasIndex(history => new { history.HouseholdId, history.CompletedDate, history.RecordedAtUtc });
     }
 }

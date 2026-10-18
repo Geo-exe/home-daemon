@@ -28,7 +28,8 @@ public sealed class ChoreCompletionService(
         Guid? completedByMemberId,
         CompletionSource source,
         string? idempotencyKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? completedByUserId = null)
     {
         // Completions write the same chore rows the scheduler writes, so they take the
         // recalculation lock to avoid interleaving with a running recalculation.
@@ -58,17 +59,10 @@ public sealed class ChoreCompletionService(
             Source = source,
             IdempotencyKey = normalizedKey,
             CompletedByMemberId = completedByMemberId,
+            CompletedByUserId = completedByUserId,
         });
 
-        chore.LastCompletedDate = effectiveDate;
-        chore.LastCompletedByMemberId = completedByMemberId ?? chore.PlannedMemberId ?? chore.LastCompletedByMemberId;
-        chore.NextOccurrenceDate = recurrence.GetNextAfterCompletion(chore, effectiveDate);
-        chore.IsLocked = false;
-        chore.NextDueDate = null;
-        chore.PlannedMemberId = null;
-        chore.UnscheduledReason = null;
-        chore.ScheduleState = ChoreScheduleState.Unplanned;
-        chore.UpdatedAtUtc = now;
+        AdvanceCycle(chore, effectiveDate, completedByMemberId, now);
 
         await PlaceProvisionalAsync(chore, household, cancellationToken).ConfigureAwait(false);
         await sync.EnqueueAsync(chore.HouseholdId, [chore], cancellationToken).ConfigureAwait(false);
@@ -89,6 +83,19 @@ public sealed class ChoreCompletionService(
         }
 
         return new ChoreCompletionResult(chore.Id, false);
+    }
+
+    private void AdvanceCycle(ChoreDefinition chore, DateOnly effectiveDate, Guid? completedByMemberId, DateTimeOffset now)
+    {
+        chore.LastCompletedDate = effectiveDate;
+        chore.LastCompletedByMemberId = completedByMemberId ?? chore.PlannedMemberId ?? chore.LastCompletedByMemberId;
+        chore.NextOccurrenceDate = recurrence.GetNextAfterCompletion(chore, effectiveDate);
+        chore.IsLocked = false;
+        chore.NextDueDate = null;
+        chore.PlannedMemberId = null;
+        chore.UnscheduledReason = null;
+        chore.ScheduleState = ChoreScheduleState.Unplanned;
+        chore.UpdatedAtUtc = now;
     }
 
     private static string NormalizeKey(string? idempotencyKey, CompletionSource source, Guid choreId, DateOnly completedDate) =>

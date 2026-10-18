@@ -14,4 +14,5 @@ public sealed record ChoreHistoryItemDto(
     DateTimeOffset RecordedAtUtc,
     CompletionSource Source,
     Guid? CompletedByMemberId,
-    string? CompletedByMemberName);
+    string? CompletedByMemberName,
+    Guid? CompletedByUserId);

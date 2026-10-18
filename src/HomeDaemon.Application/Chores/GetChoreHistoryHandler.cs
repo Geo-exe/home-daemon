@@ -131,6 +131,7 @@ public sealed class GetChoreHistoryHandler(IApplicationDbContext db)
             row.RecordedAtUtc,
             row.Source,
             row.CompletedByMemberId,
-            row.CompletedByMemberId is Guid memberId && memberNames.TryGetValue(memberId, out var name) ? name : null)).ToList();
+            row.CompletedByMemberId is Guid memberId && memberNames.TryGetValue(memberId, out var name) ? name : null,
+            row.CompletedByUserId)).ToList();
     }
 }

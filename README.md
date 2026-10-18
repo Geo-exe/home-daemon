@@ -227,11 +227,45 @@ then replace the `volumes:` entries in `docker-compose.yml` with `./data:/data` 
 
 - **Home Assistant** uses a dedicated machine credential sent in the `X-Api-Key` header
   (never in the URL), validated with a constant-time comparison.
-- **Future frontend users** use ASP.NET Core Identity (accounts in SQLite). Identity bearer
-  endpoints are mapped under `/api/v1/auth`. Cookie vs. OIDC is decided when a frontend is
-  chosen.
+- **People** sign in to the web app with an ASP.NET Core Identity account. The session is an
+  `HttpOnly`, `SameSite` cookie (`Secure` outside Development); no token is ever exposed to
+  JavaScript.
+- Mutating requests authenticated by cookie must carry the antiforgery token in
+  `X-CSRF-TOKEN`. `GET /api/v1/auth/csrf` issues the token together with its cookie; requests
+  authenticated by the Home Assistant API key are exempt.
+- Accounts carry the `Admin` or `User` role. Administration lives under
+  `/api/v1/admin/users` and requires the administrator role. Accounts are deactivated rather
+  than deleted, so completion history stays valid.
+- An account can be linked to one household member. A manual completion is attributed to the
+  signed-in account and, when linked, to that member; the client cannot claim a different
+  person. Home Assistant callbacks stay unattributed unless the payload names a member.
+- A newly created or reset account must change its password before the rest of the API becomes
+  available. The rule is enforced server-side: the API answers `403` until the change succeeds.
 - A fallback authorization policy requires an authenticated principal for every endpoint;
-  only the health probes and the auth endpoints are anonymous.
+  only the health probes, the OpenAPI document and the sign-in endpoints are anonymous.
+
+### Creating the first administrator
+
+Registration is deliberately not exposed over HTTP. Create the first account with a one-off
+command, which also applies pending migrations:
+
+```bash
+export HOMEDAEMON_ADMIN_EMAIL="you@example.com"
+export HOMEDAEMON_ADMIN_PASSWORD="a-long-temporary-password"
+dotnet run --project src/HomeDaemon.Api -- create-admin
+```
+
+The command does nothing if an administrator already exists. The password must be changed at
+the first sign-in. On the container:
+
+```bash
+docker compose run --rm \
+  -e HOMEDAEMON_ADMIN_EMAIL="you@example.com" \
+  -e HOMEDAEMON_ADMIN_PASSWORD="a-long-temporary-password" \
+  home-daemon create-admin
+```
+
+Sign in with `POST /api/v1/auth/login`, and see the current account at `GET /api/v1/auth/me`.
 
 ## Health checks
 

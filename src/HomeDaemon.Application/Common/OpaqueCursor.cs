@@ -7,7 +7,7 @@ namespace HomeDaemon.Application.Common;
 /// formatted, invariant-culture components; base64url keeps it safe in a query string. Callers
 /// own the meaning of the components and must validate them.
 /// </summary>
-internal static class OpaqueCursor
+public static class OpaqueCursor
 {
     private const char Separator = '|';
 

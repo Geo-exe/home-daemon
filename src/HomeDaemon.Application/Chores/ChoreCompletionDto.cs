@@ -7,4 +7,5 @@ public sealed record ChoreCompletionDto(
     DateOnly CompletedDate,
     DateTimeOffset RecordedAtUtc,
     CompletionSource Source,
-    Guid? CompletedByMemberId);
+    Guid? CompletedByMemberId,
+    Guid? CompletedByUserId);

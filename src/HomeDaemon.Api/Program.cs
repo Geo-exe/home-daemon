@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using HomeDaemon.Api;
 using HomeDaemon.Api.Auth;
@@ -8,10 +9,11 @@ using HomeDaemon.Application.Sync;
 using HomeDaemon.DataAccess;
 using HomeDaemon.DataAccess.Persistence;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
+const string createAdminCommand = "create-admin";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,28 +40,65 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 })
 .AddRoles<IdentityRole<Guid>>()
 .AddEntityFrameworkStores<HomeDaemonDbContext>()
-.AddApiEndpoints()
+.AddSignInManager()
 .AddDefaultTokenProviders();
 
+// Home Assistant calls carry the machine API key; browser sessions use the Identity cookie.
+// There is deliberately no bearer token: nothing sensitive is handed to JavaScript.
 builder.Services
     .AddAuthentication(options =>
     {
         options.DefaultScheme = ApiKeyDefaults.PolicyScheme;
         options.DefaultAuthenticateScheme = ApiKeyDefaults.PolicyScheme;
-        options.DefaultChallengeScheme = ApiKeyDefaults.PolicyScheme;
+        options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
     })
-    .AddPolicyScheme(ApiKeyDefaults.PolicyScheme, "API key or bearer token", options =>
+    .AddPolicyScheme(ApiKeyDefaults.PolicyScheme, "Home Assistant API key or identity cookie", options =>
     {
         options.ForwardDefaultSelector = context =>
             context.Request.Headers.ContainsKey(ApiKeyOptions.HeaderName)
                 ? ApiKeyDefaults.Scheme
-                : IdentityConstants.BearerScheme;
+                : IdentityConstants.ApplicationScheme;
     })
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyDefaults.Scheme, static _ => { })
-    .AddBearerToken(IdentityConstants.BearerScheme);
+    .AddIdentityCookies();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "homedaaemon.session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+
+    // API clients expect status codes, not a redirect to a login page.
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "homedaaemon.csrf";
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+});
 
 builder.Services.AddAuthorizationBuilder()
-    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
+    .AddPolicy(AccountRoles.AdminPolicy, policy => policy.RequireRole(AccountRoles.Admin));
 
 builder.Services.AddHealthChecks().AddDbContextCheck<HomeDaemonDbContext>("sqlite");
 
@@ -70,6 +109,12 @@ builder.Services.AddHostedService<DatabaseBackupWorker>();
 
 var app = builder.Build();
 
+if (Array.IndexOf(args, createAdminCommand) >= 0)
+{
+    await CreateAdminAsync(app).ConfigureAwait(false);
+    return;
+}
+
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
@@ -77,8 +122,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi().AllowAnonymous();
 }
 
+app.UseRouting();
+app.UseAuthentication();
+app.UseMiddleware<AccountStatusMiddleware>();
+app.UseMiddleware<CsrfValidationMiddleware>();
+app.UseAuthorization();
+
 app.MapHealthEndpoints();
-app.MapGroup("/api/v1/auth").WithTags("Auth").MapIdentityApi<ApplicationUser>().AllowAnonymous();
+app.MapAuthEndpoints();
+app.MapAdminUserEndpoints();
 
 app.MapHouseholdEndpoints();
 app.MapChoreEndpoints();
@@ -95,7 +147,78 @@ await app.RunAsync().ConfigureAwait(false);
 
 static async Task ApplyMigrationsAsync(WebApplication app)
 {
-    using var scope = app.Services.CreateAsyncScope();
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<HomeDaemonDbContext>();
     await db.Database.MigrateAsync().ConfigureAwait(false);
 }
+
+static async Task CreateAdminAsync(WebApplication app)
+{
+    var email = Environment.GetEnvironmentVariable(AdminBootstrapper.EmailVariable);
+    if (string.IsNullOrWhiteSpace(email))
+    {
+        await Console.Error.WriteLineAsync($"Set {AdminBootstrapper.EmailVariable} to the administrator email.").ConfigureAwait(false);
+        Environment.ExitCode = 78;
+        return;
+    }
+
+    var password = Environment.GetEnvironmentVariable(AdminBootstrapper.PasswordVariable);
+    if (string.IsNullOrWhiteSpace(password))
+    {
+        password = ReadPassword();
+    }
+
+    if (string.IsNullOrWhiteSpace(password))
+    {
+        await Console.Error.WriteLineAsync($"Set {AdminBootstrapper.PasswordVariable} or type the password at the prompt.").ConfigureAwait(false);
+        Environment.ExitCode = 78;
+        return;
+    }
+
+    await AdminBootstrapper.MigrateAsync(app.Services, CancellationToken.None).ConfigureAwait(false);
+    var result = await AdminBootstrapper.CreateFirstAdminAsync(app.Services, email, password).ConfigureAwait(false);
+
+    await Console.Out.WriteLineAsync(result.Created
+        ? $"Created administrator '{result.Email}'. It must change its password at the first sign-in."
+        : "An administrator already exists; nothing was created.").ConfigureAwait(false);
+}
+
+static string ReadPassword()
+{
+    if (Console.IsInputRedirected)
+    {
+        return Console.ReadLine() ?? string.Empty;
+    }
+
+    Console.Write("Administrator password: ");
+    var password = new StringBuilder();
+    while (true)
+    {
+        var key = Console.ReadKey(intercept: true);
+        if (key.Key == ConsoleKey.Enter)
+        {
+            Console.WriteLine();
+            break;
+        }
+
+        if (key.Key == ConsoleKey.Backspace)
+        {
+            if (password.Length > 0)
+            {
+                password.Length--;
+            }
+
+            continue;
+        }
+
+        if (!char.IsControl(key.KeyChar))
+        {
+            password.Append(key.KeyChar);
+        }
+    }
+
+    return password.ToString();
+}
+
+/// <summary>Exposed so the integration tests can host the real application.</summary>
+public partial class Program;

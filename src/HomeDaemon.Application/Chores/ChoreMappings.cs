@@ -56,5 +56,6 @@ internal static class ChoreMappings
         history.CompletedDate,
         history.RecordedAtUtc,
         history.Source,
-        history.CompletedByMemberId);
+        history.CompletedByMemberId,
+        history.CompletedByUserId);
 }
