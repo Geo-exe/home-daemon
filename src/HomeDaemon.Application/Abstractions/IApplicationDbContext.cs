@@ -1,3 +1,4 @@
+using HomeDaemon.Domain.Budget;
 using HomeDaemon.Domain.Chores;
 using HomeDaemon.Domain.Households;
 using HomeDaemon.Domain.Scheduling;
@@ -31,6 +32,16 @@ public interface IApplicationDbContext
     DbSet<ScheduleRun> ScheduleRuns { get; }
 
     DbSet<TodoSyncOutbox> TodoSyncOutbox { get; }
+
+    DbSet<BudgetCategory> BudgetCategories { get; }
+
+    DbSet<BudgetSubcategory> BudgetSubcategories { get; }
+
+    DbSet<BudgetIncome> BudgetIncomes { get; }
+
+    DbSet<BudgetExpense> BudgetExpenses { get; }
+
+    DbSet<BudgetTransfer> BudgetTransfers { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 

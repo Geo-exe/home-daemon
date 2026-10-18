@@ -18,6 +18,12 @@ public sealed class HouseholdMember
     /// <summary>Whether the scheduler may assign chores to this member.</summary>
     public bool IsAssignable { get; set; } = true;
 
+    /// <summary>
+    /// Whether this person takes part in the shared budget. Only participants can be used in
+    /// the budget module; it is independent of chore assignment.
+    /// </summary>
+    public bool IsBudgetParticipant { get; set; }
+
     /// <summary>Home Assistant to-do list entity that receives this member's planned chores.</summary>
     public string? TodoListEntityId { get; set; }
 

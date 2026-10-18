@@ -33,6 +33,7 @@ public static class HouseholdEndpoints
                     household.Id,
                     request.Name,
                     request.TimeZoneId,
+                    request.Currency,
                     request.PlanningHorizonDays,
                     request.DailyWindowStart,
                     request.DailyWindowEnd,
@@ -60,7 +61,7 @@ public static class HouseholdEndpoints
         {
             var household = await getHandler.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
             var created = await handler.HandleAsync(
-                new CreateMemberCommand(household.Id, request.Name, request.Color, request.IsAssignable, request.TodoListEntityId, request.PersonEntityId, request.CalendarEntityIds),
+                new CreateMemberCommand(household.Id, request.Name, request.Color, request.IsAssignable, request.IsBudgetParticipant, request.TodoListEntityId, request.PersonEntityId, request.CalendarEntityIds),
                 cancellationToken).ConfigureAwait(false);
 
             return Results.Created($"/api/v1/household/members/{created.Id}", created);
@@ -72,7 +73,7 @@ public static class HouseholdEndpoints
             UpdateMemberHandler handler,
             CancellationToken cancellationToken) =>
             Results.Ok(await handler.HandleAsync(
-                new UpdateMemberCommand(memberId, request.Name, request.Color, request.IsAssignable, request.TodoListEntityId, request.PersonEntityId, request.CalendarEntityIds),
+                new UpdateMemberCommand(memberId, request.Name, request.Color, request.IsAssignable, request.IsBudgetParticipant, request.TodoListEntityId, request.PersonEntityId, request.CalendarEntityIds),
                 cancellationToken).ConfigureAwait(false)));
 
         group.MapDelete("/household/members/{memberId:guid}", async (

@@ -79,6 +79,7 @@ export function MembersSettingsPage() {
                 </span>
                 <span className="settings-row__meta">
                   {member.isAssignable ? t('settings.members.assignable') : t('settings.members.notAssignable')}
+                  {member.isBudgetParticipant ? ` · ${t('settings.members.budgetParticipantShort')}` : ''}
                   {member.todoListEntityId ? ` · ${member.todoListEntityId}` : ''}
                   {member.calendarEntityIds.length > 0 ? ` · ${member.calendarEntityIds.length}` : ''}
                 </span>

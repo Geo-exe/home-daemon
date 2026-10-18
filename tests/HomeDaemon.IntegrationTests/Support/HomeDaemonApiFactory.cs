@@ -115,6 +115,20 @@ public sealed class HomeDaemonApiFactory : WebApplicationFactory<Program>
         return client.PostAsJsonAsync(path, body);
     }
 
+    /// <summary>Sends a PUT with the antiforgery header, mirroring <see cref="PostAsync"/>.</summary>
+    public static async Task<HttpResponseMessage> PutAsync(HttpClient client, string path, object? body)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+
+        var token = await GetCsrfTokenAsync(client).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Put, path)
+        {
+            Content = body is null ? null : JsonContent.Create(body),
+        };
+        request.Headers.TryAddWithoutValidation("X-CSRF-TOKEN", token);
+        return await client.SendAsync(request).ConfigureAwait(false);
+    }
+
     public static async Task<string> GetCsrfTokenAsync(HttpClient client)
     {
         ArgumentNullException.ThrowIfNull(client);

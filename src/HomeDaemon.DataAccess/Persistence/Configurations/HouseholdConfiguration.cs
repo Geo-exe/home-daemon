@@ -13,5 +13,6 @@ public sealed class HouseholdConfiguration : IEntityTypeConfiguration<Household>
         builder.HasKey(household => household.Id);
         builder.Property(household => household.Name).HasMaxLength(200).IsRequired();
         builder.Property(household => household.TimeZoneId).HasMaxLength(100).IsRequired();
+        builder.Property(household => household.Currency).HasMaxLength(3).IsRequired();
     }
 }

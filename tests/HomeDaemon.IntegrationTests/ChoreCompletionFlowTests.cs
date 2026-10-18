@@ -76,7 +76,7 @@ public sealed class ChoreCompletionFlowTests
     {
         var handler = new CreateMemberHandler(context, timeProvider);
         return await handler.HandleAsync(
-            new CreateMemberCommand(householdId, "Alice", null, true, "todo.alice", null, []),
+            new CreateMemberCommand(householdId, "Alice", null, true, false, "todo.alice", null, []),
             CancellationToken.None);
     }
 

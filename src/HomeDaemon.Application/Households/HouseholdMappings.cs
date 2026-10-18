@@ -8,6 +8,7 @@ internal static class HouseholdMappings
         household.Id,
         household.Name,
         household.TimeZoneId,
+        household.Currency,
         household.PlanningHorizonDays,
         household.DailyWindowStart,
         household.DailyWindowEnd,
@@ -19,6 +20,7 @@ internal static class HouseholdMappings
         member.Name,
         member.Color,
         member.IsAssignable,
+        member.IsBudgetParticipant,
         member.TodoListEntityId,
         member.PersonEntityId,
         calendarEntityIds);

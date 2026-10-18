@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { parseAmountToMinor } from './money'
 
 /**
  * Form-level validation. It mirrors the server rules so mistakes surface early, but the server
@@ -135,6 +136,7 @@ export const memberFormSchema = z.object({
     .trim()
     .refine((value) => value === '' || /^#[0-9a-fA-F]{6}$/.test(value), 'settings.members.validation.colorInvalid'),
   isAssignable: z.boolean(),
+  isBudgetParticipant: z.boolean(),
   todoListEntityId: z.string().trim().max(200, 'settings.members.validation.entityTooLong'),
   personEntityId: z.string().trim().max(200, 'settings.members.validation.entityTooLong'),
   calendarEntityIds: z.string().trim().max(2000, 'settings.members.validation.calendarsTooLong'),
@@ -148,6 +150,10 @@ export const householdFormSchema = z
       .min(1, 'settings.household.validation.nameRequired')
       .max(200, 'settings.household.validation.nameTooLong'),
     timeZoneId: z.string().trim().min(1, 'settings.household.validation.timeZoneRequired'),
+    currency: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z]{3}$/, 'settings.household.validation.currencyInvalid'),
     planningHorizonDays: z
       .string()
       .trim()
@@ -188,3 +194,75 @@ export type RoomFormValues = z.input<typeof roomFormSchema>
 export type MemberFormValues = z.input<typeof memberFormSchema>
 export type HouseholdFormValues = z.input<typeof householdFormSchema>
 export type AccountFormValues = z.input<typeof accountFormSchema>
+
+// ------------------------------------------------------------------- budget
+
+const budgetAmount = z
+  .string()
+  .trim()
+  .refine((value) => parseAmountToMinor(value) !== null, 'budget.validation.amountInvalid')
+
+const positiveBudgetAmount = budgetAmount.refine(
+  (value) => (parseAmountToMinor(value) ?? 0) > 0,
+  'budget.validation.amountPositive',
+)
+
+const budgetYear = z.string().trim().regex(/^\d{4}$/, 'budget.validation.yearInvalid')
+
+const budgetDescription = z.string().trim().max(500, 'budget.validation.descriptionTooLong')
+
+export const budgetExpenseFormSchema = z.object({
+  date: z.string().trim().refine((value) => calendarDatePattern.test(value), 'budget.validation.dateRequired'),
+  amount: positiveBudgetAmount,
+  categoryId: z.string().min(1, 'budget.validation.categoryRequired'),
+  subcategoryId: z.string(),
+  paidByMemberId: z.string().min(1, 'budget.validation.payerRequired'),
+  description: budgetDescription,
+})
+
+export const budgetTransferFormSchema = z
+  .object({
+    date: z.string().trim().refine((value) => calendarDatePattern.test(value), 'budget.validation.dateRequired'),
+    amount: positiveBudgetAmount,
+    settlementYear: budgetYear,
+    fromMemberId: z.string().min(1, 'budget.validation.senderRequired'),
+    toMemberId: z.string().min(1, 'budget.validation.receiverRequired'),
+    description: budgetDescription,
+  })
+  .refine((values) => values.fromMemberId !== values.toMemberId, {
+    path: ['toMemberId'],
+    message: 'budget.validation.samePerson',
+  })
+
+export const budgetCategoryFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'budget.validation.nameRequired')
+    .max(200, 'budget.validation.nameTooLong'),
+  sortOrder: z
+    .string()
+    .trim()
+    .regex(digitsOnly, 'budget.validation.orderInvalid')
+    .transform(Number)
+    .refine((value) => value <= 9999, 'budget.validation.orderRange'),
+})
+
+export const budgetSubcategoryFormSchema = budgetCategoryFormSchema
+
+/** A month cell accepts any non-negative amount, including an explicit zero. */
+export const budgetIncomeFormSchema = z.object({
+  amount: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || (parseAmountToMinor(value) ?? -1) >= 0,
+      'budget.validation.amountInvalid',
+    ),
+})
+
+export type BudgetExpenseFormValues = z.input<typeof budgetExpenseFormSchema>
+export type BudgetTransferFormValues = z.input<typeof budgetTransferFormSchema>
+export type BudgetCategoryFormValues = z.input<typeof budgetCategoryFormSchema>
+export type BudgetSubcategoryFormValues = z.input<typeof budgetSubcategoryFormSchema>
+export type BudgetIncomeFormValues = z.input<typeof budgetIncomeFormSchema>

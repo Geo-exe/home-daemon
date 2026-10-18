@@ -12,6 +12,9 @@ public sealed class Household
 
     public string TimeZoneId { get; set; } = "UTC";
 
+    /// <summary>ISO 4217 code of the single currency used by the budget module, for example EUR.</summary>
+    public string Currency { get; set; } = "EUR";
+
     /// <summary>Rolling planning window, expressed in civil days from "today".</summary>
     public int PlanningHorizonDays { get; set; } = 30;
 

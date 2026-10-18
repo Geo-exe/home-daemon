@@ -26,6 +26,11 @@ public sealed class UpdateHouseholdHandler(IApplicationDbContext db, TimeProvide
             throw new ApplicationValidationException("The planning horizon must be between 1 and 365 days.");
         }
 
+        if (!CurrencyCodes.IsValid(command.Currency))
+        {
+            throw new ApplicationValidationException("The currency must be a three-letter ISO 4217 code.");
+        }
+
         if (command.DailyWindowEnd <= command.DailyWindowStart)
         {
             throw new ApplicationValidationException("The daily window end must be after its start.");
@@ -38,6 +43,7 @@ public sealed class UpdateHouseholdHandler(IApplicationDbContext db, TimeProvide
 
         household.Name = command.Name.Trim();
         household.TimeZoneId = command.TimeZoneId;
+        household.Currency = CurrencyCodes.Normalize(command.Currency);
         household.PlanningHorizonDays = command.PlanningHorizonDays;
         household.DailyWindowStart = command.DailyWindowStart;
         household.DailyWindowEnd = command.DailyWindowEnd;

@@ -1,4 +1,5 @@
 using HomeDaemon.Application.Abstractions;
+using HomeDaemon.Application.Budget;
 using HomeDaemon.Application.Chores;
 using HomeDaemon.Application.Households;
 using HomeDaemon.Application.Planner;
@@ -36,6 +37,7 @@ public static class ApplicationServiceCollectionExtensions
         AddChoreHandlers(services);
         AddPlannerHandlers(services);
         AddSchedulingHandlers(services);
+        AddBudgetHandlers(services);
 
         return services;
     }
@@ -80,5 +82,34 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<RecalculateScheduleCommandHandler>();
         services.AddScoped<GetScheduleRunHandler>();
         services.AddScoped<GetScheduleRunsHandler>();
+    }
+
+    private static void AddBudgetHandlers(IServiceCollection services)
+    {
+        services.AddScoped<GetBudgetCategoriesHandler>();
+        services.AddScoped<CreateBudgetCategoryHandler>();
+        services.AddScoped<UpdateBudgetCategoryHandler>();
+        services.AddScoped<DeleteBudgetCategoryHandler>();
+        services.AddScoped<CreateBudgetSubcategoryHandler>();
+        services.AddScoped<UpdateBudgetSubcategoryHandler>();
+        services.AddScoped<DeleteBudgetSubcategoryHandler>();
+
+        services.AddScoped<GetBudgetIncomesHandler>();
+        services.AddScoped<UpsertBudgetIncomeHandler>();
+        services.AddScoped<DeleteBudgetIncomeHandler>();
+
+        services.AddScoped<GetBudgetExpensesHandler>();
+        services.AddScoped<GetBudgetExpenseHandler>();
+        services.AddScoped<CreateBudgetExpenseHandler>();
+        services.AddScoped<UpdateBudgetExpenseHandler>();
+        services.AddScoped<DeleteBudgetExpenseHandler>();
+
+        services.AddScoped<GetBudgetTransfersHandler>();
+        services.AddScoped<CreateBudgetTransferHandler>();
+        services.AddScoped<UpdateBudgetTransferHandler>();
+        services.AddScoped<DeleteBudgetTransferHandler>();
+
+        services.AddScoped<GetBudgetSummaryHandler>();
+        services.AddScoped<GetBudgetYearsHandler>();
     }
 }

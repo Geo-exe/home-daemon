@@ -64,6 +64,9 @@ export function AppShell() {
           <NavLink to="/history" className={({ isActive }) => `app__nav-link${isActive ? ' is-active' : ''}`}>
             {t('nav.history')}
           </NavLink>
+          <NavLink to="/budget" className={({ isActive }) => `app__nav-link${isActive ? ' is-active' : ''}`}>
+            {t('nav.budget')}
+          </NavLink>
           <NavLink to="/settings" className={({ isActive }) => `app__nav-link${isActive ? ' is-active' : ''}`}>
             {t('nav.settings')}
           </NavLink>

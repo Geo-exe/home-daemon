@@ -10,7 +10,8 @@ namespace HomeDaemon.IntegrationTests;
 /// End-to-end coverage of the authentication pipeline: identity cookies, antiforgery, the
 /// mandatory password change, role-based administration and completion attribution.
 /// </summary>
-public sealed class AuthFlowTests : IClassFixture<HomeDaemonApiFactory>
+[Collection(ApiCollection.Name)]
+public sealed class AuthFlowTests
 {
     private readonly HomeDaemonApiFactory _factory;
 

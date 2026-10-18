@@ -33,6 +33,7 @@ function MemberForm({ member, onClose }: { member: HouseholdMember | null; onClo
     name: member?.name ?? '',
     color: member?.color ?? '',
     isAssignable: member?.isAssignable ?? true,
+    isBudgetParticipant: member?.isBudgetParticipant ?? false,
     todoListEntityId: member?.todoListEntityId ?? '',
     personEntityId: member?.personEntityId ?? '',
     calendarEntityIds: (member?.calendarEntityIds ?? []).join('\n'),
@@ -60,6 +61,7 @@ function MemberForm({ member, onClose }: { member: HouseholdMember | null; onClo
       name: parsed.data.name,
       color: parsed.data.color === '' ? null : parsed.data.color,
       isAssignable: parsed.data.isAssignable,
+      isBudgetParticipant: parsed.data.isBudgetParticipant,
       todoListEntityId: parsed.data.todoListEntityId === '' ? null : parsed.data.todoListEntityId,
       personEntityId: parsed.data.personEntityId === '' ? null : parsed.data.personEntityId,
       calendarEntityIds: splitIdentifierList(parsed.data.calendarEntityIds),
@@ -134,6 +136,15 @@ function MemberForm({ member, onClose }: { member: HouseholdMember | null; onClo
             onChange={(event) => setField('isAssignable', event.target.checked)}
           />
           <span>{t('settings.members.assignable')}</span>
+        </label>
+
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={values.isBudgetParticipant}
+            onChange={(event) => setField('isBudgetParticipant', event.target.checked)}
+          />
+          <span>{t('settings.members.budgetParticipant')}</span>
         </label>
 
         <Field

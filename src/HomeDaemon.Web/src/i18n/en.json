@@ -19,6 +19,7 @@
     "unknown": "Unknown",
     "yes": "Yes",
     "no": "No",
+    "loadMore": "Load more",
     "required": "Required"
   },
   "nav": {
@@ -26,6 +27,7 @@
     "chores": "Chores",
     "planner": "Planner",
     "history": "History",
+    "budget": "Budget",
     "settings": "Settings"
   },
   "account": {
@@ -254,6 +256,7 @@
       "household": "Household",
       "rooms": "Rooms",
       "members": "People",
+      "budget": "Budget categories",
       "accounts": "Accounts"
     },
     "household": {
@@ -261,6 +264,8 @@
       "name": "Name",
       "timeZone": "Time zone",
       "timeZoneHint": "Used for calendar dates, the daily window and job times.",
+      "currency": "Currency",
+      "currencyHint": "ISO 4217 code, for example EUR. Used by the budget module.",
       "planningHorizon": "Planning horizon (days)",
       "planningHorizonHint": "How far ahead the planner looks for chores.",
       "windowStart": "Daily window starts",
@@ -275,6 +280,7 @@
         "nameRequired": "Give the household a name.",
         "nameTooLong": "Keep the name under 200 characters.",
         "timeZoneRequired": "Enter a time zone, for example Europe/Rome.",
+        "currencyInvalid": "Use a three-letter code such as EUR.",
         "horizonInvalid": "Enter a whole number of days.",
         "horizonRange": "Use a number between 1 and 365.",
         "timeInvalid": "Use a time such as 08:00.",
@@ -310,6 +316,8 @@
       "empty": "No people yet.",
       "assignable": "Can receive chores",
       "notAssignable": "Not assignable",
+      "budgetParticipant": "Takes part in the budget",
+      "budgetParticipantShort": "Budget",
       "homeAssistant": "Home Assistant",
       "name": "Name",
       "color": "Colour",
@@ -361,6 +369,135 @@
         "emailInvalid": "Enter a valid email address.",
         "displayNameTooLong": "Keep the display name under 200 characters."
       }
+    }
+  },
+  "budget": {
+    "title": "Budget",
+    "subtitle": "Shared expenses split by income and settled with transfers.",
+    "nav": {
+      "summary": "Summary",
+      "expenses": "Expenses",
+      "incomes": "Incomes",
+      "transfers": "Transfers",
+      "categories": "Categories"
+    },
+    "actions": {
+      "addExpense": "Add expense",
+      "addTransfer": "Add transfer",
+      "cancel": "Cancel",
+      "cancelExpense": "Cancel this expense"
+    },
+    "field": {
+      "year": "Year",
+      "amount": "Amount",
+      "date": "Date",
+      "category": "Category",
+      "subcategory": "Subcategory",
+      "subcategoryOptional": "Optional. It must belong to the chosen category.",
+      "paidBy": "Paid by",
+      "description": "Description",
+      "name": "Name",
+      "sortOrder": "Order",
+      "settlementYear": "Settlement year",
+      "settlementYearHint": "The year this transfer settles. It may differ from the payment date.",
+      "from": "From",
+      "to": "To",
+      "selectCategory": "Choose a category",
+      "selectPerson": "Choose a person",
+      "noSubcategory": "No subcategory"
+    },
+    "filters": {
+      "allYears": "All years",
+      "allCategories": "All categories",
+      "allPeople": "Everyone"
+    },
+    "summary": {
+      "totalIncome": "Total income",
+      "totalExpenses": "Total expenses",
+      "annualIncome": "Annual income",
+      "paid": "Paid",
+      "due": "Share due",
+      "balance": "Balance",
+      "share": "{{percent}}% of the year",
+      "shareUnavailable": "No income recorded",
+      "missingMonths_one": "{{count}} month without income",
+      "missingMonths_other": "{{count}} months without income",
+      "noIncome": "No income has been recorded for this year, so the shares cannot be computed yet.",
+      "provisional": "The balance is provisional: some income months are still missing.",
+      "completeIncome": "Complete the incomes",
+      "settled": "Everything is settled for this year.",
+      "owes": "{{debtor}} owes {{amount}} to {{creditor}}",
+      "byCategory": "Expenses by category",
+      "emptyCategories": "No expense has been recorded for this year."
+    },
+    "expenses": {
+      "title": "Expenses",
+      "subtitle": "Every shared expense, newest first.",
+      "empty": "No expense matches these filters.",
+      "paidBy": "paid by",
+      "cancelTitle": "Cancel this expense?",
+      "cancelBody": "The expense is removed and the yearly balance is recomputed."
+    },
+    "expenseForm": {
+      "newTitle": "New expense",
+      "editTitle": "Edit expense",
+      "noParticipants": "No one takes part in the budget yet.",
+      "configurePeople": "Configure people",
+      "noCategories": "No category yet.",
+      "configureCategories": "Configure categories",
+      "saveAndAdd": "Save & add",
+      "saved": "Expense saved. Add the next one."
+    },
+    "incomes": {
+      "title": "Incomes",
+      "subtitle": "Net monthly income per person. It sets the whole year's proportion.",
+      "retroactive": "Every income you enter re-splits all the expenses of the year, including the ones already recorded.",
+      "amountFor": "{{month}} income",
+      "noParticipants": "No one takes part in the budget yet."
+    },
+    "transfers": {
+      "title": "Transfers",
+      "subtitle": "Real money movements that settle a year's balance.",
+      "empty": "No transfer recorded yet.",
+      "allYears": "All settlement years",
+      "direction": "{{from}} → {{to}}",
+      "newTitle": "New transfer",
+      "editTitle": "Edit transfer",
+      "cancelTitle": "Cancel this transfer?",
+      "cancelBody": "The transfer is removed and the yearly balance is recomputed."
+    },
+    "categories": {
+      "title": "Budget categories",
+      "subtitle": "Categories and subcategories used to classify expenses.",
+      "addCategory": "Add category",
+      "editCategory": "Edit category",
+      "addSubcategory": "Add subcategory",
+      "editSubcategory": "Edit subcategory",
+      "empty": "No category yet. Add the first one.",
+      "order": "Order",
+      "summary_one": "{{count}} subcategory · order {{order}}",
+      "summary_other": "{{count}} subcategories · order {{order}}",
+      "subcategoriesOf": "Subcategories of {{name}}",
+      "noSubcategories": "No subcategories yet.",
+      "deleteCategoryTitle": "Delete “{{name}}”?",
+      "deleteSubcategoryTitle": "Delete “{{name}}”?",
+      "deleteBody": "A category can only be deleted while no expense uses it."
+    },
+    "validation": {
+      "amountInvalid": "Enter an amount such as 12.50.",
+      "amountPositive": "The amount must be greater than zero.",
+      "dateRequired": "Choose a date.",
+      "categoryRequired": "Choose a category.",
+      "payerRequired": "Choose who paid.",
+      "senderRequired": "Choose who sent the money.",
+      "receiverRequired": "Choose who received the money.",
+      "samePerson": "The sender and the receiver must be different people.",
+      "yearInvalid": "Enter a four-digit year.",
+      "nameRequired": "Give it a name.",
+      "nameTooLong": "Keep the name under 200 characters.",
+      "orderInvalid": "Enter a whole number.",
+      "orderRange": "Use a number between 0 and 9999.",
+      "descriptionTooLong": "Keep the description under 500 characters."
     }
   },
   "enums": {

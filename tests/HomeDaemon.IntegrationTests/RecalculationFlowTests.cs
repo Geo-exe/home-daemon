@@ -29,7 +29,7 @@ public sealed class RecalculationFlowTests
             .HandleAsync(new CreateHouseholdCommand("Home", "UTC"), CancellationToken.None);
 
         await new CreateMemberHandler(context, timeProvider)
-            .HandleAsync(new CreateMemberCommand(household.Id, "Alice", null, true, "todo.alice", null, []), CancellationToken.None);
+            .HandleAsync(new CreateMemberCommand(household.Id, "Alice", null, true, false, "todo.alice", null, []), CancellationToken.None);
 
         var chore = await new CreateChoreHandler(context, recurrence, timeProvider)
             .HandleAsync(

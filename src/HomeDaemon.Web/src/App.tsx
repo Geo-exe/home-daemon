@@ -15,6 +15,21 @@ const ChoreDetailPage = lazy(() => import('./pages/ChoreDetailPage').then((modul
 const ChoreFormPage = lazy(() => import('./pages/ChoreFormPage').then((module) => ({ default: module.ChoreFormPage })))
 const PlannerPage = lazy(() => import('./pages/PlannerPage').then((module) => ({ default: module.PlannerPage })))
 const HistoryPage = lazy(() => import('./pages/HistoryPage').then((module) => ({ default: module.HistoryPage })))
+const BudgetSummaryPage = lazy(() =>
+  import('./pages/BudgetSummaryPage').then((module) => ({ default: module.BudgetSummaryPage })),
+)
+const BudgetExpensesPage = lazy(() =>
+  import('./pages/BudgetExpensesPage').then((module) => ({ default: module.BudgetExpensesPage })),
+)
+const BudgetExpenseFormPage = lazy(() =>
+  import('./pages/BudgetExpenseFormPage').then((module) => ({ default: module.BudgetExpenseFormPage })),
+)
+const BudgetIncomesPage = lazy(() =>
+  import('./pages/BudgetIncomesPage').then((module) => ({ default: module.BudgetIncomesPage })),
+)
+const BudgetTransfersPage = lazy(() =>
+  import('./pages/BudgetTransfersPage').then((module) => ({ default: module.BudgetTransfersPage })),
+)
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout').then((module) => ({ default: module.SettingsLayout })))
 const HouseholdSettingsPage = lazy(() =>
   import('./pages/settings/HouseholdSettingsPage').then((module) => ({ default: module.HouseholdSettingsPage })),
@@ -27,6 +42,11 @@ const MembersSettingsPage = lazy(() =>
 )
 const AccountsSettingsPage = lazy(() =>
   import('./pages/settings/AccountsSettingsPage').then((module) => ({ default: module.AccountsSettingsPage })),
+)
+const BudgetCategoriesSettingsPage = lazy(() =>
+  import('./pages/settings/BudgetCategoriesSettingsPage').then((module) => ({
+    default: module.BudgetCategoriesSettingsPage,
+  })),
 )
 
 function RouteFallback() {
@@ -50,11 +70,18 @@ export function App() {
             <Route path="/chores/:choreId/edit" element={<ChoreFormPage />} />
             <Route path="/planner" element={<PlannerPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/budget" element={<BudgetSummaryPage />} />
+            <Route path="/budget/expenses" element={<BudgetExpensesPage />} />
+            <Route path="/budget/expenses/new" element={<BudgetExpenseFormPage />} />
+            <Route path="/budget/expenses/:expenseId" element={<BudgetExpenseFormPage />} />
+            <Route path="/budget/incomes" element={<BudgetIncomesPage />} />
+            <Route path="/budget/transfers" element={<BudgetTransfersPage />} />
             <Route path="/settings" element={<SettingsLayout />}>
               <Route index element={<Navigate to="/settings/household" replace />} />
               <Route path="household" element={<HouseholdSettingsPage />} />
               <Route path="rooms" element={<RoomsSettingsPage />} />
               <Route path="members" element={<MembersSettingsPage />} />
+              <Route path="budget/categories" element={<BudgetCategoriesSettingsPage />} />
               <Route path="accounts" element={<AccountsSettingsPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />

@@ -1,4 +1,5 @@
 using System.Globalization;
+using HomeDaemon.Application.Budget;
 using HomeDaemon.Application.Chores;
 using HomeDaemon.Application.Households;
 using HomeDaemon.Application.Recurrence;
@@ -21,9 +22,10 @@ internal static class TestSeed
         TimeProvider timeProvider,
         Guid householdId,
         string name = "Alice",
-        bool isAssignable = true) =>
+        bool isAssignable = true,
+        bool isBudgetParticipant = false) =>
         new CreateMemberHandler(db, timeProvider).HandleAsync(
-            new CreateMemberCommand(householdId, name, null, isAssignable, $"todo.{name.ToLowerInvariant()}", null, []),
+            new CreateMemberCommand(householdId, name, null, isAssignable, isBudgetParticipant, $"todo.{name.ToLowerInvariant()}", null, []),
             CancellationToken.None);
 
     public static Task<RoomDto> RoomAsync(HomeDaemonDbContext db, TimeProvider timeProvider, Guid householdId, string name = "Kitchen") =>
@@ -79,4 +81,46 @@ internal static class TestSeed
 
         await db.SaveChangesAsync(CancellationToken.None);
     }
+
+    public static Task<BudgetCategoryDto> BudgetCategoryAsync(
+        HomeDaemonDbContext db,
+        TimeProvider timeProvider,
+        Guid householdId,
+        string name = "Food") =>
+        new CreateBudgetCategoryHandler(db, timeProvider)
+            .HandleAsync(new CreateBudgetCategoryCommand(householdId, name, 0), CancellationToken.None);
+
+    public static Task<BudgetSubcategoryDto> BudgetSubcategoryAsync(
+        HomeDaemonDbContext db,
+        TimeProvider timeProvider,
+        Guid householdId,
+        Guid categoryId,
+        string name = "Groceries") =>
+        new CreateBudgetSubcategoryHandler(db, timeProvider)
+            .HandleAsync(new CreateBudgetSubcategoryCommand(householdId, categoryId, name, 0), CancellationToken.None);
+
+    public static Task<BudgetExpenseDto> BudgetExpenseAsync(
+        HomeDaemonDbContext db,
+        TimeProvider timeProvider,
+        Guid householdId,
+        DateOnly date,
+        long amountMinor,
+        Guid categoryId,
+        Guid paidByMemberId,
+        Guid? subcategoryId = null) =>
+        new CreateBudgetExpenseHandler(db, timeProvider)
+            .HandleAsync(
+                new CreateBudgetExpenseCommand(householdId, date, amountMinor, categoryId, subcategoryId, paidByMemberId, null),
+                CancellationToken.None);
+
+    public static Task<BudgetIncomeMonthDto> BudgetIncomeAsync(
+        HomeDaemonDbContext db,
+        TimeProvider timeProvider,
+        Guid householdId,
+        Guid memberId,
+        int year,
+        int month,
+        long amountMinor) =>
+        new UpsertBudgetIncomeHandler(db, timeProvider)
+            .HandleAsync(new UpsertBudgetIncomeCommand(householdId, memberId, year, month, amountMinor), CancellationToken.None);
 }

@@ -16,6 +16,7 @@ function toFormValues(household: Household): HouseholdFormValues {
   return {
     name: household.name,
     timeZoneId: household.timeZoneId,
+    currency: household.currency,
     planningHorizonDays: String(household.planningHorizonDays),
     // The API returns HH:mm:ss; the time input wants HH:mm.
     dailyWindowStart: household.dailyWindowStart.slice(0, 5),
@@ -73,6 +74,7 @@ function HouseholdForm({ initialValues }: { initialValues: HouseholdFormValues }
     const model: HouseholdWriteModel = {
       name: parsed.data.name,
       timeZoneId: parsed.data.timeZoneId,
+      currency: parsed.data.currency,
       planningHorizonDays: parsed.data.planningHorizonDays,
       dailyWindowStart: parsed.data.dailyWindowStart,
       dailyWindowEnd: parsed.data.dailyWindowEnd,
@@ -141,6 +143,29 @@ function HouseholdForm({ initialValues }: { initialValues: HouseholdFormValues }
               value={values.timeZoneId}
               aria-describedby={describedBy('household-timezone', t('settings.household.timeZoneHint'), errorFor('timeZoneId'))}
               onChange={(event) => setField('timeZoneId', event.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="form__row">
+          <Field
+            label={t('settings.household.currency')}
+            htmlFor="household-currency"
+            hint={t('settings.household.currencyHint')}
+            error={errorFor('currency')}
+          >
+            <input
+              id="household-currency"
+              className="input"
+              type="text"
+              required
+              maxLength={3}
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="EUR"
+              value={values.currency}
+              aria-describedby={describedBy('household-currency', t('settings.household.currencyHint'), errorFor('currency'))}
+              onChange={(event) => setField('currency', event.target.value)}
             />
           </Field>
         </div>

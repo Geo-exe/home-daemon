@@ -138,6 +138,7 @@ app.MapHouseholdEndpoints();
 app.MapChoreEndpoints();
 app.MapPlannerEndpoints();
 app.MapSchedulingEndpoints();
+app.MapBudgetEndpoints();
 app.MapHomeAssistantEndpoints();
 
 // Single-page app fallback. Only paths that are not the API or a probe get the app shell, so an

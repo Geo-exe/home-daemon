@@ -24,6 +24,7 @@ public sealed class UpdateMemberHandler(IApplicationDbContext db, TimeProvider t
         member.Name = command.Name.Trim();
         member.Color = command.Color;
         member.IsAssignable = command.IsAssignable;
+        member.IsBudgetParticipant = command.IsBudgetParticipant;
         member.TodoListEntityId = HouseholdTextHelpers.NullIfWhiteSpace(command.TodoListEntityId);
         member.PersonEntityId = HouseholdTextHelpers.NullIfWhiteSpace(command.PersonEntityId);
         member.UpdatedAtUtc = now;

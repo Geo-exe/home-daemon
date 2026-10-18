@@ -28,6 +28,7 @@ public sealed class CreateMemberHandler(IApplicationDbContext db, TimeProvider t
             Name = command.Name.Trim(),
             Color = command.Color,
             IsAssignable = command.IsAssignable,
+            IsBudgetParticipant = command.IsBudgetParticipant,
             TodoListEntityId = HouseholdTextHelpers.NullIfWhiteSpace(command.TodoListEntityId),
             PersonEntityId = HouseholdTextHelpers.NullIfWhiteSpace(command.PersonEntityId),
             CreatedAtUtc = now,

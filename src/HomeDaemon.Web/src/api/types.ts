@@ -34,6 +34,7 @@ export interface Household {
   id: string
   name: string
   timeZoneId: string
+  currency: string
   planningHorizonDays: number
   dailyWindowStart: string
   dailyWindowEnd: string
@@ -52,6 +53,7 @@ export interface HouseholdMember {
   name: string
   color: string | null
   isAssignable: boolean
+  isBudgetParticipant: boolean
   todoListEntityId: string | null
   personEntityId: string | null
   calendarEntityIds: string[]
@@ -207,4 +209,97 @@ export interface ChoreHistoryItem {
   completedByMemberId: string | null
   completedByMemberName: string | null
   completedByUserId: string | null
+}
+
+// ------------------------------------------------------------------ budget
+//
+// Money always travels as integer minor units (cents); the frontend only formats it for
+// display. Dates are calendar dates in `yyyy-MM-dd` form.
+
+export interface BudgetSubcategory {
+  id: string
+  categoryId: string
+  name: string
+  sortOrder: number
+}
+
+export interface BudgetCategory {
+  id: string
+  name: string
+  sortOrder: number
+  subcategories: BudgetSubcategory[]
+}
+
+/** One cell of the income grid; a null amount means the month was not entered. */
+export interface BudgetIncomeMonth {
+  month: number
+  amountMinor: number | null
+  incomeId: string | null
+}
+
+export interface BudgetMemberIncomes {
+  memberId: string
+  name: string
+  months: BudgetIncomeMonth[]
+}
+
+export interface BudgetIncomes {
+  year: number
+  currency: string
+  members: BudgetMemberIncomes[]
+}
+
+export interface BudgetExpense {
+  id: string
+  date: CalendarDate
+  amountMinor: number
+  categoryId: string
+  categoryName: string
+  subcategoryId: string | null
+  subcategoryName: string | null
+  paidByMemberId: string
+  paidByMemberName: string
+  description: string | null
+}
+
+export interface BudgetTransfer {
+  id: string
+  date: CalendarDate
+  settlementYear: number
+  amountMinor: number
+  fromMemberId: string
+  fromMemberName: string
+  toMemberId: string
+  toMemberName: string
+  description: string | null
+}
+
+export interface BudgetMemberSummary {
+  memberId: string
+  name: string
+  annualIncomeMinor: number
+  share: number | null
+  paidMinor: number
+  dueMinor: number | null
+  transferredOutMinor: number
+  transferredInMinor: number
+  balanceMinor: number | null
+  missingMonths: number[]
+}
+
+export interface BudgetCategoryTotal {
+  categoryId: string
+  name: string
+  amountMinor: number
+}
+
+export interface BudgetSummary {
+  year: number
+  currency: string
+  totalIncomeMinor: number
+  totalExpensesMinor: number
+  proportionAvailable: boolean
+  incomeComplete: boolean
+  members: BudgetMemberSummary[]
+  byCategory: BudgetCategoryTotal[]
 }

@@ -8,6 +8,7 @@ export const membersQueryKey = ['household', 'members'] as const
 export interface HouseholdWriteModel {
   name: string
   timeZoneId: string
+  currency: string
   planningHorizonDays: number
   /** `HH:mm`; the API expects a time value. */
   dailyWindowStart: string
@@ -25,6 +26,7 @@ export interface MemberWriteModel {
   name: string
   color: string | null
   isAssignable: boolean
+  isBudgetParticipant: boolean
   todoListEntityId: string | null
   personEntityId: string | null
   calendarEntityIds: string[]
@@ -38,6 +40,7 @@ export function updateHousehold(model: HouseholdWriteModel): Promise<Household> 
   return apiPut<Household>('/household', {
     name: model.name,
     timeZoneId: model.timeZoneId,
+    currency: model.currency,
     planningHorizonDays: model.planningHorizonDays,
     // The API binds TimeOnly, which round-trips seconds.
     dailyWindowStart: `${model.dailyWindowStart}:00`,

@@ -121,6 +121,21 @@ public sealed class HouseholdDeletionTests
     }
 
     [Fact]
+    public async Task DeletingAMemberReferencedByTheBudget_IsAConflict()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var db = database.Context;
+        var time = TestTimeProvider.At(TestSeed.DefaultDate);
+        var household = await TestSeed.HouseholdAsync(db, time);
+        var member = await TestSeed.MemberAsync(db, time, household.Id, isBudgetParticipant: true);
+        await TestSeed.BudgetIncomeAsync(db, time, household.Id, member.Id, 2025, 1, 1000);
+
+        var delete = () => new DeleteMemberHandler(db).HandleAsync(new DeleteMemberCommand(member.Id), TestContext.Current.CancellationToken);
+
+        await delete.Should().ThrowAsync<EntityConflictException>();
+    }
+
+    [Fact]
     public async Task DeletingAnUnreferencedMember_RemovesThemAndTheirCalendars()
     {
         await using var database = await SqliteTestDatabase.CreateAsync();

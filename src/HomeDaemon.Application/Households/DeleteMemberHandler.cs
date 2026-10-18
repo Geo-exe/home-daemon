@@ -5,9 +5,10 @@ using Microsoft.EntityFrameworkCore;
 namespace HomeDaemon.Application.Households;
 
 /// <summary>
-/// Deletes a member only when nothing references them: not an active or deleted chore, and not
-/// a single completion in the history. History is immutable, so a member who has ever
-/// completed a chore is kept forever; the caller should stop scheduling to them instead.
+/// Deletes a member only when nothing references them: not an active or deleted chore, not a
+/// single completion in the history, and not a budget income, expense or transfer. History is
+/// immutable, so a member who has ever been used is kept forever; the caller should stop
+/// scheduling to them instead.
 /// </summary>
 public sealed class DeleteMemberHandler(IApplicationDbContext db)
 {
@@ -37,9 +38,22 @@ public sealed class DeleteMemberHandler(IApplicationDbContext db)
             .AnyAsync(history => history.CompletedByMemberId == memberId, cancellationToken)
             .ConfigureAwait(false);
 
-        if (referencedByChore || referencedByHistory)
+        var referencedByBudget = await db.BudgetIncomes
+            .AsNoTracking()
+            .AnyAsync(income => income.MemberId == memberId, cancellationToken)
+            .ConfigureAwait(false)
+            || await db.BudgetExpenses
+                .AsNoTracking()
+                .AnyAsync(expense => expense.PaidByMemberId == memberId, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.BudgetTransfers
+                .AsNoTracking()
+                .AnyAsync(transfer => transfer.FromMemberId == memberId || transfer.ToMemberId == memberId, cancellationToken)
+                .ConfigureAwait(false);
+
+        if (referencedByChore || referencedByHistory || referencedByBudget)
         {
-            throw new EntityConflictException($"Member '{memberId}' is still referenced by chores or completion history.");
+            throw new EntityConflictException($"Member '{memberId}' is still referenced by chores, history or the budget.");
         }
 
         db.HouseholdMembers.Remove(member);

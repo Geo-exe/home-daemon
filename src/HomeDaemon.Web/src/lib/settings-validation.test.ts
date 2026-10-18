@@ -36,6 +36,7 @@ describe('memberFormSchema', () => {
     name: 'Alice',
     color: '',
     isAssignable: true,
+    isBudgetParticipant: false,
     todoListEntityId: 'todo.alice',
     personEntityId: '',
     calendarEntityIds: '',
@@ -55,6 +56,7 @@ describe('householdFormSchema', () => {
   const valid = {
     name: 'Home',
     timeZoneId: 'Europe/Rome',
+    currency: 'EUR',
     planningHorizonDays: '30',
     dailyWindowStart: '08:00',
     dailyWindowEnd: '21:00',
@@ -87,6 +89,11 @@ describe('householdFormSchema', () => {
 
   it('validates the time format', () => {
     expect(householdFormSchema.safeParse({ ...valid, dailyWindowStart: '8:00' }).success).toBe(false)
+  })
+
+  it('requires a three-letter currency code', () => {
+    expect(householdFormSchema.safeParse({ ...valid, currency: 'EURO' }).success).toBe(false)
+    expect(householdFormSchema.safeParse({ ...valid, currency: 'eur' }).success).toBe(true)
   })
 })
 

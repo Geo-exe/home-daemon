@@ -7,6 +7,7 @@ const tabs = [
   { to: '/settings/household', labelKey: 'settings.tabs.household' },
   { to: '/settings/rooms', labelKey: 'settings.tabs.rooms' },
   { to: '/settings/members', labelKey: 'settings.tabs.members' },
+  { to: '/settings/budget/categories', labelKey: 'settings.tabs.budget' },
 ] as const
 
 export function SettingsLayout() {

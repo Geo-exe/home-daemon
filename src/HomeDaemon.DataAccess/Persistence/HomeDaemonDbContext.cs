@@ -1,4 +1,5 @@
 using HomeDaemon.Application.Abstractions;
+using HomeDaemon.Domain.Budget;
 using HomeDaemon.Domain.Chores;
 using HomeDaemon.Domain.Households;
 using HomeDaemon.Domain.Scheduling;
@@ -35,6 +36,16 @@ public sealed class HomeDaemonDbContext(DbContextOptions<HomeDaemonDbContext> op
     public DbSet<ScheduleRun> ScheduleRuns => Set<ScheduleRun>();
 
     public DbSet<TodoSyncOutbox> TodoSyncOutbox => Set<TodoSyncOutbox>();
+
+    public DbSet<BudgetCategory> BudgetCategories => Set<BudgetCategory>();
+
+    public DbSet<BudgetSubcategory> BudgetSubcategories => Set<BudgetSubcategory>();
+
+    public DbSet<BudgetIncome> BudgetIncomes => Set<BudgetIncome>();
+
+    public DbSet<BudgetExpense> BudgetExpenses => Set<BudgetExpense>();
+
+    public DbSet<BudgetTransfer> BudgetTransfers => Set<BudgetTransfer>();
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken) =>
         Database.BeginTransactionAsync(cancellationToken);

@@ -1,5 +1,6 @@
 using HomeDaemon.Application.Abstractions;
 using HomeDaemon.DataAccess.Persistence;
+using HomeDaemon.Domain.Budget;
 using HomeDaemon.Domain.Chores;
 using HomeDaemon.Domain.Households;
 using HomeDaemon.Domain.Scheduling;
@@ -64,5 +65,7 @@ public sealed class LayerDependencyTests
         Assert.Same(domainAssembly, typeof(ScheduleRun).Assembly);
         Assert.Same(domainAssembly, typeof(TodoSyncOutbox).Assembly);
         Assert.Same(domainAssembly, typeof(Room).Assembly);
+        Assert.Same(domainAssembly, typeof(BudgetCategory).Assembly);
+        Assert.Same(domainAssembly, typeof(BudgetExpense).Assembly);
     }
 }
