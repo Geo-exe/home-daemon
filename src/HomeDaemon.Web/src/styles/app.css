@@ -1091,3 +1091,81 @@ a:hover {
     flex: 0 0 auto;
   }
 }
+
+/* -------------------------------------------------------------- chore form */
+
+/*
+ * The chore form is grouped into labelled blocks so a phone shows a few short sections instead
+ * of one long column of fields, and rarely used fields stay behind a disclosure.
+ */
+.form-section {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  min-width: 0;
+}
+
+.form-section__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.form-section__hint {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.form-section--collapsible > summary {
+  cursor: pointer;
+  list-style-position: inside;
+  margin-bottom: 0;
+}
+
+.form-section--collapsible[open] > summary {
+  margin-bottom: var(--space-3);
+}
+
+/* A group of independent checkboxes with its own helper text. */
+.form__checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  gap: var(--space-2);
+  /* Bleeds to the edges of the content column so the bar reaches the screen edges on a phone. */
+  margin: 0 calc(-1 * var(--space-4));
+  padding: var(--space-3) var(--space-4);
+  /* Keeps the buttons clear of the home indicator on a phone; the fallback covers browsers
+     without env(). */
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+.form-actions .button {
+  flex: 1;
+}
+
+@media (min-width: 720px) {
+  .form-actions {
+    justify-content: flex-end;
+  }
+
+  .form-actions .button {
+    flex: 0 0 auto;
+    min-width: 8rem;
+  }
+}

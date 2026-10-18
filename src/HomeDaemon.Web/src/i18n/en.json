@@ -77,6 +77,13 @@
       "paused": "Paused",
       "allRooms": "All rooms"
     },
+    "form": {
+      "basics": "Basics",
+      "repeat": "Repeat",
+      "assignment": "Assignment",
+      "advanced": "More options",
+      "advancedHint": "Effort weighting, grouping and availability"
+    },
     "field": {
       "title": "Title",
       "description": "Description",

@@ -1,10 +1,26 @@
-import { apiGet, apiPost, resetAntiforgeryToken } from './client'
+import { ApiError, apiGet, apiPost, resetAntiforgeryToken } from './client'
 import type { CurrentUser } from './types'
 
 export const sessionQueryKey = ['session'] as const
 
 export async function getCurrentUser(signal?: AbortSignal): Promise<CurrentUser> {
   return apiGet<CurrentUser>('/auth/me', signal)
+}
+
+/**
+ * Resolves to null when there is no session: a 401 here is the normal answer for "signed out",
+ * not a failure worth surfacing or retrying.
+ */
+export async function loadCurrentUser(signal?: AbortSignal): Promise<CurrentUser | null> {
+  try {
+    return await getCurrentUser(signal)
+  } catch (error) {
+    if (error instanceof ApiError && error.isUnauthorized) {
+      return null
+    }
+
+    throw error
+  }
 }
 
 export async function login(email: string, password: string): Promise<CurrentUser> {

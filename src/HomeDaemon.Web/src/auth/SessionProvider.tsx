@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getCurrentUser, login, logout, sessionQueryKey } from '../api/auth'
+import { loadCurrentUser, login, logout, sessionQueryKey } from '../api/auth'
 import type { CurrentUser } from '../api/types'
 import { SessionContext, type SessionValue } from './session-context'
 
@@ -13,7 +13,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const session = useQuery({
     queryKey: sessionQueryKey,
-    queryFn: ({ signal }) => getCurrentUser(signal),
+    queryFn: ({ signal }) => loadCurrentUser(signal),
     retry: false,
     staleTime: 30_000,
   })
@@ -29,7 +29,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         await logout()
-        queryClient.clear()
+
+        // Drop everything cached for the previous session. The session entry itself is updated
+        // rather than cleared: an actively observed query would keep serving its last data, and
+        // the app would stay on a protected screen instead of returning to sign-in.
+        queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== sessionQueryKey[0] })
+        queryClient.setQueryData(sessionQueryKey, null)
       },
       reload: async () => {
         await queryClient.invalidateQueries({ queryKey: sessionQueryKey })

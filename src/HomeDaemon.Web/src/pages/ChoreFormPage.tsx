@@ -21,6 +21,9 @@ import {
   type ChoreFormValues,
 } from '../lib/validation'
 
+/** Fields kept behind "More options": they have sensible defaults and are rarely changed. */
+const advancedFields = ['effortWeight', 'preferSameRoomGrouping', 'isActive'] as const
+
 const emptyValues: ChoreFormValues = {
   title: '',
   description: '',
@@ -53,6 +56,14 @@ function toFormValues(chore: ChoreDetail): ChoreFormValues {
     assignmentPolicy: chore.assignmentPolicy,
     fixedAssigneeMemberId: chore.fixedAssigneeMemberId ?? '',
   }
+}
+
+/**
+ * The advanced section opens on its own when the chore already uses one of its fields, so those
+ * values are never hidden from the person editing.
+ */
+function usesAdvancedOptions(values: ChoreFormValues): boolean {
+  return values.effortWeight !== '' || values.preferSameRoomGrouping || !values.isActive
 }
 
 /** The form is shared by creation and editing; the presence of an id decides which one it is. */
@@ -109,6 +120,7 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formErrorKey, setFormErrorKey] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(() => usesAdvancedOptions(initialValues))
 
   const assignableMembers = useMemo(() => members.filter((member) => member.isAssignable), [members])
 
@@ -117,13 +129,28 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
   const update = <K extends keyof ChoreFormValues>(key: K, value: ChoreFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
 
+  // The anchor date is only meaningful for a fixed schedule, but an existing value stays visible.
+  const showAnchorDate = values.mode === 'Anchored' || values.anchorDate !== ''
+
+  const busyLabel = isEditing ? t('common.saving') : t('chores.actions.creating')
+  const idleLabel = isEditing ? t('common.save') : t('chores.actions.create')
+
+  const applyFieldErrors = (errors: Record<string, string>) => {
+    setFieldErrors(errors)
+
+    // A collapsed section would hide its own error, so open it when it holds one.
+    if (advancedFields.some((field) => field in errors)) {
+      setAdvancedOpen(true)
+    }
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setFormErrorKey(null)
 
     const parsed = choreFormSchema.safeParse(values)
     if (!parsed.success) {
-      setFieldErrors(issuesToFieldErrors(parsed.error))
+      applyFieldErrors(issuesToFieldErrors(parsed.error))
       return
     }
 
@@ -155,7 +182,7 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
     } catch (error) {
       const problems = fieldProblems(error)
       if (Object.keys(problems).length > 0) {
-        setFieldErrors(
+        applyFieldErrors(
           Object.fromEntries(
             Object.entries(problems).map(([field, messages]) => [field, messages[0] ?? 'errors.generic']),
           ),
@@ -170,14 +197,7 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
 
   return (
     <>
-      <PageHeader
-        title={isEditing ? t('chores.detail.editTitle') : t('chores.detail.newTitle')}
-        actions={
-          <Link className="button" to={isEditing ? `/chores/${choreId}` : '/chores'}>
-            {t('common.cancel')}
-          </Link>
-        }
-      />
+      <PageHeader title={isEditing ? t('chores.detail.editTitle') : t('chores.detail.newTitle')} />
 
       {formErrorKey ? (
         <p className="notice notice--error" role="alert">
@@ -185,214 +205,263 @@ function ChoreFormEditor({ choreId, initialValues, rooms, members }: ChoreFormEd
         </p>
       ) : null}
 
-      <form className="form form--grid" onSubmit={(event) => { void handleSubmit(event) }} noValidate>
-        <div className="form__row form__row--wide">
-          <Field label={t('chores.field.title')} htmlFor="chore-title" error={errorFor('title')}>
-            <input
-              id="chore-title"
-              className="input"
-              type="text"
-              required
-              maxLength={200}
-              value={values.title}
-              aria-describedby={describedBy('chore-title', undefined, errorFor('title'))}
-              onChange={(event) => update('title', event.target.value)}
-            />
-          </Field>
-        </div>
+      <form className="form" onSubmit={(event) => { void handleSubmit(event) }} noValidate>
+        <section className="form-section" role="group" aria-labelledby="chore-section-basics">
+          <h2 className="form-section__title" id="chore-section-basics">
+            {t('chores.form.basics')}
+          </h2>
 
-        <div className="form__row form__row--wide">
-          <Field label={t('chores.field.description')} htmlFor="chore-description" error={errorFor('description')}>
-            <textarea
-              id="chore-description"
-              className="input input--textarea"
-              rows={3}
-              maxLength={2000}
-              value={values.description}
-              onChange={(event) => update('description', event.target.value)}
-            />
-          </Field>
-        </div>
+          <div className="form--grid">
+            <div className="form__row form__row--wide">
+              <Field label={t('chores.field.title')} htmlFor="chore-title" error={errorFor('title')}>
+                <input
+                  id="chore-title"
+                  className="input"
+                  type="text"
+                  required
+                  maxLength={200}
+                  autoComplete="off"
+                  value={values.title}
+                  aria-describedby={describedBy('chore-title', undefined, errorFor('title'))}
+                  onChange={(event) => update('title', event.target.value)}
+                />
+              </Field>
+            </div>
 
-        <div className="form__row">
-          <Field label={t('chores.field.room')} htmlFor="chore-room">
-            <select
-              id="chore-room"
-              className="input"
-              value={values.roomId}
-              onChange={(event) => update('roomId', event.target.value)}
-            >
-              <option value="">{t('chores.field.noRoom')}</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
+            <div className="form__row">
+              <Field label={t('chores.field.room')} htmlFor="chore-room">
+                <select
+                  id="chore-room"
+                  className="input"
+                  value={values.roomId}
+                  onChange={(event) => update('roomId', event.target.value)}
+                >
+                  <option value="">{t('chores.field.noRoom')}</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
 
-        <div className="form__row">
-          <Field label={t('chores.field.duration')} htmlFor="chore-duration" error={errorFor('estimatedMinutes')}>
-            <input
-              id="chore-duration"
-              className="input"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={1440}
-              value={values.estimatedMinutes}
-              aria-describedby={describedBy('chore-duration', undefined, errorFor('estimatedMinutes'))}
-              onChange={(event) => update('estimatedMinutes', event.target.value)}
-            />
-          </Field>
-        </div>
+            <div className="form__row">
+              <Field label={t('chores.field.duration')} htmlFor="chore-duration" error={errorFor('estimatedMinutes')}>
+                <input
+                  id="chore-duration"
+                  className="input"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={1440}
+                  value={values.estimatedMinutes}
+                  aria-describedby={describedBy('chore-duration', undefined, errorFor('estimatedMinutes'))}
+                  onChange={(event) => update('estimatedMinutes', event.target.value)}
+                />
+              </Field>
+            </div>
 
-        <div className="form__row">
-          <Field
-            label={t('chores.field.effortWeight')}
-            htmlFor="chore-effort"
-            hint={t('chores.field.effortWeightHint')}
-            error={errorFor('effortWeight')}
-          >
-            <input
-              id="chore-effort"
-              className="input"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step="0.5"
-              value={values.effortWeight}
-              aria-describedby={describedBy('chore-effort', t('chores.field.effortWeightHint'), errorFor('effortWeight'))}
-              onChange={(event) => update('effortWeight', event.target.value)}
-            />
-          </Field>
-        </div>
-
-        <div className="form__row">
-          <Field label={t('chores.field.frequency')} htmlFor="chore-frequency" error={errorFor('frequency')}>
-            <select
-              id="chore-frequency"
-              className="input"
-              value={values.frequency}
-              onChange={(event) => update('frequency', event.target.value as ChoreFormValues['frequency'])}
-            >
-              {frequencyOptions(values.frequency).map((frequency) => (
-                <option key={frequency} value={frequency}>
-                  {t(`enums.frequency.${frequency}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        <div className="form__row">
-          <Field label={t(intervalLabelKey(values.frequency))} htmlFor="chore-interval" error={errorFor('interval')}>
-            <input
-              id="chore-interval"
-              className="input"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={365}
-              value={values.interval}
-              aria-describedby={describedBy('chore-interval', undefined, errorFor('interval'))}
-              onChange={(event) => update('interval', event.target.value)}
-            />
-          </Field>
-        </div>
-
-        <div className="form__row">
-          <Field label={t('chores.field.mode')} htmlFor="chore-mode" error={errorFor('mode')}>
-            <select
-              id="chore-mode"
-              className="input"
-              value={values.mode}
-              onChange={(event) => update('mode', event.target.value as ChoreFormValues['mode'])}
-            >
-              {recurrenceModes.map((mode) => (
-                <option key={mode} value={mode}>
-                  {t(`enums.mode.${mode}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        <div className="form__row">
-          <Field
-            label={t('chores.field.anchorDate')}
-            htmlFor="chore-anchor"
-            hint={t('chores.field.anchorDateHint')}
-            error={errorFor('anchorDate')}
-          >
-            <input
-              id="chore-anchor"
-              className="input"
-              type="date"
-              value={values.anchorDate}
-              aria-describedby={describedBy('chore-anchor', t('chores.field.anchorDateHint'), errorFor('anchorDate'))}
-              onChange={(event) => update('anchorDate', event.target.value)}
-            />
-          </Field>
-        </div>
-
-        <div className="form__row">
-          <Field label={t('chores.field.assignment')} htmlFor="chore-assignment" error={errorFor('assignmentPolicy')}>
-            <select
-              id="chore-assignment"
-              className="input"
-              value={values.assignmentPolicy}
-              onChange={(event) => update('assignmentPolicy', event.target.value as ChoreFormValues['assignmentPolicy'])}
-            >
-              {assignmentPolicies.map((policy) => (
-                <option key={policy} value={policy}>
-                  {t(`enums.assignment.${policy}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        {values.assignmentPolicy === 'SpecificMember' ? (
-          <div className="form__row">
-            <Field label={t('chores.field.assignee')} htmlFor="chore-assignee" error={errorFor('fixedAssigneeMemberId')}>
-              <select
-                id="chore-assignee"
-                className="input"
-                value={values.fixedAssigneeMemberId}
-                onChange={(event) => update('fixedAssigneeMemberId', event.target.value)}
-              >
-                <option value="">—</option>
-                {assignableMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <div className="form__row form__row--wide">
+              <Field label={t('chores.field.description')} htmlFor="chore-description" error={errorFor('description')}>
+                <textarea
+                  id="chore-description"
+                  className="input input--textarea"
+                  rows={3}
+                  maxLength={2000}
+                  value={values.description}
+                  onChange={(event) => update('description', event.target.value)}
+                />
+              </Field>
+            </div>
           </div>
-        ) : null}
+        </section>
 
-        <div className="form__row form__row--wide form__row--checks">
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={values.preferSameRoomGrouping}
-              onChange={(event) => update('preferSameRoomGrouping', event.target.checked)}
-            />
-            <span>{t('chores.field.preferSameRoom')}</span>
-          </label>
+        <section className="form-section" role="group" aria-labelledby="chore-section-repeat">
+          <h2 className="form-section__title" id="chore-section-repeat">
+            {t('chores.form.repeat')}
+          </h2>
 
-          <label className="checkbox">
-            <input type="checkbox" checked={values.isActive} onChange={(event) => update('isActive', event.target.checked)} />
-            <span>{t('chores.field.active')}</span>
-          </label>
-        </div>
+          <div className="form--grid">
+            <div className="form__row">
+              <Field label={t('chores.field.frequency')} htmlFor="chore-frequency" error={errorFor('frequency')}>
+                <select
+                  id="chore-frequency"
+                  className="input"
+                  value={values.frequency}
+                  onChange={(event) => update('frequency', event.target.value as ChoreFormValues['frequency'])}
+                >
+                  {frequencyOptions(values.frequency).map((frequency) => (
+                    <option key={frequency} value={frequency}>
+                      {t(`enums.frequency.${frequency}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
 
-        <div className="form__row form__row--wide">
+            <div className="form__row">
+              <Field label={t(intervalLabelKey(values.frequency))} htmlFor="chore-interval" error={errorFor('interval')}>
+                <input
+                  id="chore-interval"
+                  className="input"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={365}
+                  value={values.interval}
+                  aria-describedby={describedBy('chore-interval', undefined, errorFor('interval'))}
+                  onChange={(event) => update('interval', event.target.value)}
+                />
+              </Field>
+            </div>
+
+            <div className={showAnchorDate ? 'form__row' : 'form__row form__row--wide'}>
+              <Field label={t('chores.field.mode')} htmlFor="chore-mode" error={errorFor('mode')}>
+                <select
+                  id="chore-mode"
+                  className="input"
+                  value={values.mode}
+                  onChange={(event) => update('mode', event.target.value as ChoreFormValues['mode'])}
+                >
+                  {recurrenceModes.map((mode) => (
+                    <option key={mode} value={mode}>
+                      {t(`enums.mode.${mode}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            {showAnchorDate ? (
+              <div className="form__row">
+                <Field
+                  label={t('chores.field.anchorDate')}
+                  htmlFor="chore-anchor"
+                  hint={t('chores.field.anchorDateHint')}
+                  error={errorFor('anchorDate')}
+                >
+                  <input
+                    id="chore-anchor"
+                    className="input"
+                    type="date"
+                    value={values.anchorDate}
+                    aria-describedby={describedBy('chore-anchor', t('chores.field.anchorDateHint'), errorFor('anchorDate'))}
+                    onChange={(event) => update('anchorDate', event.target.value)}
+                  />
+                </Field>
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="form-section" role="group" aria-labelledby="chore-section-assignment">
+          <h2 className="form-section__title" id="chore-section-assignment">
+            {t('chores.form.assignment')}
+          </h2>
+
+          <div className="form--grid">
+            <div className="form__row">
+              <Field label={t('chores.field.assignment')} htmlFor="chore-assignment" error={errorFor('assignmentPolicy')}>
+                <select
+                  id="chore-assignment"
+                  className="input"
+                  value={values.assignmentPolicy}
+                  onChange={(event) => update('assignmentPolicy', event.target.value as ChoreFormValues['assignmentPolicy'])}
+                >
+                  {assignmentPolicies.map((policy) => (
+                    <option key={policy} value={policy}>
+                      {t(`enums.assignment.${policy}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            {values.assignmentPolicy === 'SpecificMember' ? (
+              <div className="form__row">
+                <Field label={t('chores.field.assignee')} htmlFor="chore-assignee" error={errorFor('fixedAssigneeMemberId')}>
+                  <select
+                    id="chore-assignee"
+                    className="input"
+                    value={values.fixedAssigneeMemberId}
+                    onChange={(event) => update('fixedAssigneeMemberId', event.target.value)}
+                  >
+                    <option value="">—</option>
+                    {assignableMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        <details
+          className="form-section form-section--collapsible"
+          open={advancedOpen}
+          onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+        >
+          <summary className="form-section__title">
+            {t('chores.form.advanced')}
+            <span className="form-section__hint">{t('chores.form.advancedHint')}</span>
+          </summary>
+
+          <div className="form--grid">
+            <div className="form__row">
+              <Field
+                label={t('chores.field.effortWeight')}
+                htmlFor="chore-effort"
+                hint={t('chores.field.effortWeightHint')}
+                error={errorFor('effortWeight')}
+              >
+                <input
+                  id="chore-effort"
+                  className="input"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.5"
+                  value={values.effortWeight}
+                  aria-describedby={describedBy('chore-effort', t('chores.field.effortWeightHint'), errorFor('effortWeight'))}
+                  onChange={(event) => update('effortWeight', event.target.value)}
+                />
+              </Field>
+            </div>
+
+            <div className="form__checks">
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={values.preferSameRoomGrouping}
+                  onChange={(event) => update('preferSameRoomGrouping', event.target.checked)}
+                />
+                <span>{t('chores.field.preferSameRoom')}</span>
+              </label>
+
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={values.isActive}
+                  onChange={(event) => update('isActive', event.target.checked)}
+                />
+                <span>{t('chores.field.active')}</span>
+              </label>
+              <p className="field__hint">{t('chores.field.activeHint')}</p>
+            </div>
+          </div>
+        </details>
+
+        {/* Stays in view while the form scrolls, which is the common case on a phone. */}
+        <div className="form-actions">
+          <Link className="button" to={isEditing ? `/chores/${choreId}` : '/chores'}>
+            {t('common.cancel')}
+          </Link>
           <button type="submit" className="button button--primary" disabled={submitting || !isOnline}>
-            {submitting ? t('chores.actions.creating') : isEditing ? t('common.save') : t('chores.actions.create')}
+            {submitting ? busyLabel : idleLabel}
           </button>
         </div>
       </form>
