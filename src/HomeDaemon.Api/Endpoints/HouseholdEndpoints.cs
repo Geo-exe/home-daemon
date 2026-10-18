@@ -74,6 +74,15 @@ public static class HouseholdEndpoints
             Results.Ok(await handler.HandleAsync(
                 new UpdateMemberCommand(memberId, request.Name, request.Color, request.IsAssignable, request.TodoListEntityId, request.PersonEntityId, request.CalendarEntityIds),
                 cancellationToken).ConfigureAwait(false)));
+
+        group.MapDelete("/household/members/{memberId:guid}", async (
+            Guid memberId,
+            DeleteMemberHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            await handler.HandleAsync(new DeleteMemberCommand(memberId), cancellationToken).ConfigureAwait(false);
+            return Results.NoContent();
+        });
     }
 
     private static void MapRooms(RouteGroupBuilder group)
@@ -93,6 +102,22 @@ public static class HouseholdEndpoints
             var household = await getHandler.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
             var created = await handler.HandleAsync(new CreateRoomCommand(household.Id, request.Name, request.SortOrder), cancellationToken).ConfigureAwait(false);
             return Results.Created($"/api/v1/household/rooms/{created.Id}", created);
+        });
+
+        group.MapPut("/household/rooms/{roomId:guid}", async (
+            Guid roomId,
+            UpdateRoomRequest request,
+            UpdateRoomHandler handler,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await handler.HandleAsync(new UpdateRoomCommand(roomId, request.Name, request.SortOrder), cancellationToken).ConfigureAwait(false)));
+
+        group.MapDelete("/household/rooms/{roomId:guid}", async (
+            Guid roomId,
+            DeleteRoomHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            await handler.HandleAsync(new DeleteRoomCommand(roomId), cancellationToken).ConfigureAwait(false);
+            return Results.NoContent();
         });
     }
 }

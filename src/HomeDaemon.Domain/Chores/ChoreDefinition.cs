@@ -62,6 +62,12 @@ public sealed class ChoreDefinition
 
     public string? UnscheduledReason { get; set; }
 
+    /// <summary>
+    /// Set when the chore is deleted. Deletion is soft so the completion history stays intact;
+    /// a global query filter hides deleted chores unless a query opts out explicitly.
+    /// </summary>
+    public DateTimeOffset? DeletedAtUtc { get; set; }
+
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset UpdatedAtUtc { get; set; }

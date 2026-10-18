@@ -33,5 +33,10 @@ public sealed class ChoreDefinitionConfiguration : IEntityTypeConfiguration<Chor
 
         builder.HasIndex(chore => new { chore.HouseholdId, chore.IsActive, chore.NextOccurrenceDate });
         builder.HasIndex(chore => new { chore.HouseholdId, chore.ScheduleState });
+
+        // Soft delete: deleted chores stay in the database (so completion history keeps its
+        // foreign key) but are hidden from every query that does not opt out with
+        // IgnoreQueryFilters, for example the history reader.
+        builder.HasQueryFilter(chore => chore.DeletedAtUtc == null);
     }
 }

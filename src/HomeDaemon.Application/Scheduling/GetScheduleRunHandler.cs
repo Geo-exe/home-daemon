@@ -16,16 +16,6 @@ public sealed class GetScheduleRunHandler(IApplicationDbContext db)
             .ConfigureAwait(false)
             ?? throw new EntityNotFoundException($"Schedule run '{query.RunId}' was not found.");
 
-        return new ScheduleRunDto(
-            run.Id,
-            run.Trigger,
-            run.Status,
-            run.StartedAtUtc,
-            run.CompletedAtUtc,
-            run.ScheduledCount,
-            run.UnscheduledCount,
-            run.Summary,
-            run.Diagnostics,
-            run.ErrorMessage);
+        return ScheduleRunMappings.ToDto(run);
     }
 }

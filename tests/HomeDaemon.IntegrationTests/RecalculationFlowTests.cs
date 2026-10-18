@@ -45,7 +45,7 @@ public sealed class RecalculationFlowTests
         };
 
         context.ScheduleRuns.Add(run);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var executor = new RecalculationExecutor(
             context,
@@ -58,11 +58,11 @@ public sealed class RecalculationFlowTests
 
         await executor.ExecuteAsync(run.Id, CancellationToken.None);
 
-        var storedRun = await context.ScheduleRuns.AsNoTracking().FirstAsync(item => item.Id == run.Id);
+        var storedRun = await context.ScheduleRuns.AsNoTracking().FirstAsync(item => item.Id == run.Id, TestContext.Current.CancellationToken);
         storedRun.Status.Should().Be(ScheduleRunStatus.Succeeded);
         storedRun.ScheduledCount.Should().Be(1);
 
-        var storedChore = await context.Chores.AsNoTracking().FirstAsync(item => item.Id == chore.Id);
+        var storedChore = await context.Chores.AsNoTracking().FirstAsync(item => item.Id == chore.Id, TestContext.Current.CancellationToken);
         storedChore.ScheduleState.Should().Be(ChoreScheduleState.Scheduled);
         storedChore.NextDueDate.Should().Be(today);
     }

@@ -47,8 +47,11 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<GetHouseholdHandler>();
         services.AddScoped<CreateMemberHandler>();
         services.AddScoped<UpdateMemberHandler>();
+        services.AddScoped<DeleteMemberHandler>();
         services.AddScoped<GetMembersHandler>();
         services.AddScoped<CreateRoomHandler>();
+        services.AddScoped<UpdateRoomHandler>();
+        services.AddScoped<DeleteRoomHandler>();
         services.AddScoped<GetRoomsHandler>();
     }
 
@@ -57,10 +60,12 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<CreateChoreHandler>();
         services.AddScoped<UpdateChoreHandler>();
         services.AddScoped<DeleteChoreHandler>();
+        services.AddScoped<RestoreChoreHandler>();
         services.AddScoped<CompleteChoreHandler>();
         services.AddScoped<RecordHomeAssistantCompletionHandler>();
         services.AddScoped<GetChoresHandler>();
         services.AddScoped<GetChoreHandler>();
+        services.AddScoped<GetChoreHistoryHandler>();
     }
 
     private static void AddPlannerHandlers(IServiceCollection services)
@@ -74,5 +79,6 @@ public static class ApplicationServiceCollectionExtensions
     {
         services.AddScoped<RecalculateScheduleCommandHandler>();
         services.AddScoped<GetScheduleRunHandler>();
+        services.AddScoped<GetScheduleRunsHandler>();
     }
 }

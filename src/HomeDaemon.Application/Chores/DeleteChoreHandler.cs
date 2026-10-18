@@ -49,10 +49,14 @@ public sealed class DeleteChoreHandler(IApplicationDbContext db, TimeProvider ti
             });
         }
 
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        // Soft delete: the chore row is kept so the completion history and its foreign keys
+        // stay valid. The global query filter hides it from catalog, planner and scheduling.
+        // The Home Assistant mapping and the queued deletions are committed in the same
+        // transaction as the flag, so a retry can never lose the link between the two.
+        db.TodoItemLinks.RemoveRange(links);
+        chore.DeletedAtUtc = now;
+        chore.UpdatedAtUtc = now;
 
-        await db.TodoItemLinks.Where(link => link.ChoreDefinitionId == chore.Id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-        await db.CompletionHistory.Where(history => history.ChoreDefinitionId == chore.Id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-        await db.Chores.Where(item => item.Id == chore.Id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

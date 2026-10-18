@@ -18,6 +18,7 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
         var (status, title) = exception switch
         {
             EntityNotFoundException => (StatusCodes.Status404NotFound, "Not found"),
+            EntityConflictException => (StatusCodes.Status409Conflict, "Conflict"),
             ApplicationValidationException => (StatusCodes.Status400BadRequest, "Validation failed"),
             BadHttpRequestException badRequest => (badRequest.StatusCode, "Bad request"),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred"),

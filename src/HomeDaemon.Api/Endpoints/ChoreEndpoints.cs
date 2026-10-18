@@ -11,6 +11,7 @@ public static class ChoreEndpoints
         var group = app.MapGroup("/api/v1/chores").WithTags("Chores");
         MapListAndCreate(group);
         MapItemOperations(group);
+        MapHistory(group);
         return group;
     }
 
@@ -86,9 +87,35 @@ public static class ChoreEndpoints
             return Results.NoContent();
         });
 
+        group.MapPost("/{choreId:guid}/restore", async (Guid choreId, RestoreChoreHandler handler, CancellationToken cancellationToken) =>
+            Results.Ok(await handler.HandleAsync(new RestoreChoreCommand(choreId), cancellationToken).ConfigureAwait(false)));
+
         group.MapPost("/{choreId:guid}/complete", async (Guid choreId, CompleteChoreRequest request, CompleteChoreHandler handler, CancellationToken cancellationToken) =>
             Results.Ok(await handler.HandleAsync(
                 new CompleteChoreCommand(choreId, request.CompletedDate, request.CompletedByMemberId, CompletionSource.Manual, request.IdempotencyKey),
                 cancellationToken).ConfigureAwait(false)));
+    }
+
+    private static void MapHistory(RouteGroupBuilder group)
+    {
+        group.MapGet("/history", async (
+            Guid? choreId,
+            Guid? memberId,
+            DateOnly? from,
+            DateOnly? to,
+            CompletionSource? source,
+            string? cursor,
+            int? pageSize,
+            GetHouseholdHandler getHousehold,
+            GetChoreHistoryHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var household = await getHousehold.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
+            var page = await handler.HandleAsync(
+                new GetChoreHistoryQuery(household.Id, choreId, memberId, from, to, source, cursor, pageSize),
+                cancellationToken).ConfigureAwait(false);
+
+            return Results.Ok(page);
+        });
     }
 }

@@ -33,14 +33,14 @@ public sealed class ChoreCompletionFlowTests
 
         result.IsDuplicate.Should().BeFalse();
 
-        var stored = await context.Chores.AsNoTracking().FirstAsync(item => item.Id == chore.Id);
+        var stored = await context.Chores.AsNoTracking().FirstAsync(item => item.Id == chore.Id, TestContext.Current.CancellationToken);
         stored.LastCompletedDate.Should().Be(Today);
         stored.NextOccurrenceDate.Should().Be(Today.AddDays(1));
         stored.NextDueDate.Should().Be(Today.AddDays(1));
         stored.ScheduleState.Should().Be(ChoreScheduleState.Scheduled);
 
-        (await context.CompletionHistory.CountAsync()).Should().Be(1);
-        (await context.TodoSyncOutbox.CountAsync()).Should().BeGreaterThan(0);
+        (await context.CompletionHistory.CountAsync(TestContext.Current.CancellationToken)).Should().Be(1);
+        (await context.TodoSyncOutbox.CountAsync(TestContext.Current.CancellationToken)).Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class ChoreCompletionFlowTests
         var second = await handler.HandleAsync(command, CancellationToken.None);
 
         second.IsDuplicate.Should().BeTrue();
-        (await context.CompletionHistory.CountAsync()).Should().Be(1);
+        (await context.CompletionHistory.CountAsync(TestContext.Current.CancellationToken)).Should().Be(1);
     }
 
     private static async Task<HouseholdDto> SeedHouseholdAsync(HomeDaemonDbContext context, TimeProvider timeProvider)
