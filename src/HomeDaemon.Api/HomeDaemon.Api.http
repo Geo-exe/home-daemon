@@ -1,6 +1,0 @@
-@HomeDaemon.Api_HostAddress = http://localhost:5255
-
-GET {{HomeDaemon.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
