@@ -157,6 +157,7 @@ environment variables or container secrets and are never committed.
 |---|---|---|
 | `ConnectionStrings` | `HomeDaemon` | SQLite file path |
 | `Database` | `ApplyMigrationsOnStartup` | Apply migrations when the single instance starts |
+| `ForwardedHeaders` | `Enabled`, `KnownProxies`, `KnownNetworks` | Trust a TLS-terminating reverse proxy |
 | `ApiKey` | `Value` | Machine credential for Home Assistant → HomeDaemon (`X-Api-Key`) |
 | `HomeAssistant` | `BaseUrl`, `Token`, `TimeoutSeconds` | Outbound Home Assistant calls |
 | `Recalculation` | `NightlyRunTime` | Local time of the nightly recalculation |
@@ -312,6 +313,43 @@ sudo chown -R 1654:1654 ./data ./backups
 
 then replace the `volumes:` entries in `docker-compose.yml` with `./data:/data` and
 `./backups:/backups`.
+
+#### Running behind a reverse proxy
+
+The API listens on plain HTTP, so a proxy that terminates TLS in front of it must tell the app
+what the original request looked like. HomeDaemon reads the standard `X-Forwarded-For` and
+`X-Forwarded-Proto` headers, but only when the feature is enabled and only from the addresses
+you trust — a request cannot spoof its own scheme or client address.
+
+Tailscale Serve is the simplest option for a home network: it gives the container an HTTPS
+address inside the tailnet without a certificate of your own. Point it at the published port and
+enable the trust in `.env`:
+
+```bash
+# On the LXC container
+tailscale serve --bg 8080
+```
+
+```dotenv
+# In .env, next to docker-compose.yml
+ForwardedHeaders__Enabled=true
+ForwardedHeaders__KnownNetworks__0=172.18.0.0/16
+```
+
+Replace the network with the one the proxy connects from. Docker gives each compose project a
+private subnet (usually inside `172.16.0.0/12`); if the value does not cover it, the container
+logs `Unknown proxy: <address>` and the forwarded headers are ignored — read that address from
+`docker compose logs home-daemon` and trust it instead. Multiple entries are numbered from
+zero: `ForwardedHeaders__KnownProxies__0`, `ForwardedHeaders__KnownProxies__1`, and so on.
+Restart the container after editing `.env`:
+
+```bash
+docker compose up -d home-daemon
+```
+
+The cookie policy stays `Secure` in production, so the app must be reached over HTTPS (the
+Tailscale Serve URL, or a proxy of your choice). Enabling the feature without listing at least
+one proxy or network makes the app fail at startup on purpose.
 
 ## Authentication
 

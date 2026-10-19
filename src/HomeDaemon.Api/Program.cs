@@ -32,6 +32,10 @@ builder.Services.Configure<RecalculationScheduleOptions>(builder.Configuration.G
 builder.Services.Configure<BackupScheduleOptions>(builder.Configuration.GetSection("Backup"));
 builder.Services.Configure<TodoSyncOptions>(builder.Configuration.GetSection("TodoSync"));
 
+// Opt-in support for running behind a TLS-terminating reverse proxy, so the app restores the
+// original https scheme instead of seeing the plain http hop the proxy uses internally.
+builder.Services.AddForwardedHeaders(builder.Configuration);
+
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.User.RequireUniqueEmail = true;
@@ -114,6 +118,10 @@ if (Array.IndexOf(args, createAdminCommand) >= 0)
     await CreateAdminAsync(app).ConfigureAwait(false);
     return;
 }
+
+// Must run before anything that depends on the scheme or the client address, most importantly
+// authentication and the cookie policy.
+app.UseForwardedHeaders();
 
 app.UseExceptionHandler();
 app.UseDefaultFiles();
