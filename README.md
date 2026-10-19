@@ -189,12 +189,53 @@ dotnet-ef migrations add <Name> --project src/HomeDaemon.DataAccess --startup-pr
 EF migrations are generated code; analyzer/style enforcement is disabled for them via
 `.editorconfig`.
 
+## Home Assistant custom integration
+
+`custom_components/home_daemon` is a Home Assistant custom integration that connects an
+instance to HomeDaemon without hand-written automations. It is distributed by HACS from
+this repository (the repo root holds the HACS metadata; the integration itself stays in
+the standard `custom_components/home_daemon` directory).
+
+Configure it once with the HomeDaemon **base URL** and the **machine API key**
+(`ApiKey__Value`). The setup flow validates the URL with the anonymous liveness probe and
+the key with an authenticated handshake, then registers a device with the household name.
+
+The integration covers Home Assistant → HomeDaemon calls. HomeDaemon still needs its own
+outbound `HomeAssistant__BaseUrl` and `HomeAssistant__Token` to write chores to the
+member to-do lists; the two directions are configured independently.
+
+It provides:
+
+- **Binary sensors** — `API reachable` (liveness) and `Ready` (readiness, including the
+  database health check).
+- **Last recalculation sensor** — the outcome of the newest schedule run
+  (`never`, `running`, `succeeded`, `failed`) with the run id, trigger, timestamps,
+  scheduled/unscheduled counts, summary and error as attributes.
+- **Action `home_daemon.start_recalculation`** — starts a recalculation and optionally
+  returns the new run. The sensor above follows its outcome.
+- **To-do completions** — items completed on any `todo.*` list are reported to HomeDaemon.
+  Lists belong to members, so the list identifies who completed the chore; items that
+  belong to lists HomeDaemon does not manage are discarded quietly. No automation is
+  required.
+
+Install it through HACS as a custom repository (category *Integration*) or copy
+`custom_components/home_daemon` into your Home Assistant configuration directory and
+restart. Removing the integration from Home Assistant leaves HomeDaemon untouched.
+
+The integration is validated in CI and on release with `pytest`, `hassfest` and the HACS
+action. Releases publish `home_daemon.zip`, a flat archive of the integration whose
+`manifest.json` version is stamped from the tag automatically; the version committed in the
+repository is only the latest known one, so a release does not depend on a manual bump.
+
 ## Continuous integration (pull requests)
 
 Every pull request targeting `main` runs
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml): a single **Build and test** job
-restores, builds and tests the .NET solution, then installs the web dependencies from the
-lockfile and runs `npm run verify` (type-check, lint, unit tests and production build).
+detects which areas the pull request touched and runs the matching suites. Changes under
+`src/` run the .NET solution tests and the web `npm run verify` (type-check, lint, unit
+tests and production build); changes under `custom_components/home_daemon/` run the Python
+tests, `hassfest` and the HACS validation. A pull request that touches neither still passes,
+which keeps the required check green without running unrelated work.
 
 To make it mandatory, add a branch ruleset for `main` under **GitHub → Settings → Rules →
 Rulesets** and require the **Build and test** status check before merging. The workflow only
@@ -212,11 +253,15 @@ Pushing a **release tag** whose commit is on `main` runs
    restored, built in `Release` and all three test projects run.
 2. **Verify the web app** — dependencies are installed from the lockfile and
    `npm run verify` runs the type-check, lint, unit tests and production build.
-3. **Publish container image** — [`Dockerfile`](Dockerfile) is built for `linux/amd64` and
+3. **Verify the Home Assistant integration** — the Python tests, `hassfest` and the HACS
+   validation run on every release.
+4. **Publish container image** — [`Dockerfile`](Dockerfile) is built for `linux/amd64` and
    `linux/arm64` and pushed to GitHub Container Registry (GHCR) as
    `ghcr.io/geo-exe/home-daemon`, tagged with the full version, `major.minor`, `major`,
    `latest` (non-prerelease tags only) and `sha-<short>`.
-4. **Create GitHub release** — a release with auto-generated notes.
+5. **Create GitHub release** — a release with auto-generated notes and the `home_daemon.zip`
+   asset. HACS tracks the release tag, and the archive manifest version is stamped from that
+   tag, so the same tag publishes the container image and the custom integration.
 
 ```bash
 git switch main

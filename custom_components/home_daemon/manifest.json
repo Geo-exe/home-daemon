@@ -1,0 +1,13 @@
+{
+  "domain": "home_daemon",
+  "name": "HomeDaemon",
+  "codeowners": ["@geo-exe"],
+  "config_flow": true,
+  "dependencies": ["todo"],
+  "documentation": "https://github.com/geo-exe/home-daemon",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/geo-exe/home-daemon/issues",
+  "requirements": [],
+  "version": "1.2.0"
+}

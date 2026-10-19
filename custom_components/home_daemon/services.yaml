@@ -1,0 +1,15 @@
+# Describes the service actions exposed by the HomeDaemon integration.
+start_recalculation:
+  name: Start recalculation
+  description: >-
+    Ask HomeDaemon to recalculate the chore schedule now. The recalculation runs in the
+    background; the "Last recalculation" sensor follows its outcome.
+  fields:
+    entry_id:
+      name: Config entry
+      description: >-
+        Optional HomeDaemon config entry id. Omit it when only one instance is configured.
+      required: false
+      example: 01J8Z3W4M5N6P7Q8R9S0T1U2V3
+      selector:
+        text: {}

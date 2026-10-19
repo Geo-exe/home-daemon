@@ -66,3 +66,8 @@ backups/
 # The single-page app is built into the API's static content by the Dockerfile; a local
 # build is not source.
 src/HomeDaemon.Api/wwwroot/
+
+# Python artifacts from the Home Assistant custom integration and its tests
+__pycache__/
+*.py[cod]
+.pytest_cache/
