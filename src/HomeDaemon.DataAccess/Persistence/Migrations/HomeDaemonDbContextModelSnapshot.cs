@@ -648,6 +648,54 @@ namespace HomeDaemon.DataAccess.Persistence.Migrations
                     b.ToTable("rooms", (string)null);
                 });
 
+            modelBuilder.Entity("HomeDaemon.Domain.Integrations.HomeAssistantCallLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool?>("IsTransient")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("OccurredAtUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("OccurredAtUtc", "Id");
+
+                    b.ToTable("home_assistant_call_logs", (string)null);
+                });
+
             modelBuilder.Entity("HomeDaemon.Domain.Scheduling.ScheduleRun", b =>
                 {
                     b.Property<Guid>("Id")

@@ -75,19 +75,6 @@ export function BudgetSummaryPage() {
 
       {summary.data ? (
         <>
-          {!summary.data.proportionAvailable ? (
-            <p className="notice notice--warning" role="status">
-              {t('budget.summary.noIncome')}
-            </p>
-          ) : null}
-
-          {summary.data.proportionAvailable && !summary.data.incomeComplete ? (
-            <p className="notice notice--warning" role="status">
-              {t('budget.summary.provisional')}{' '}
-              <Link to={`/budget/incomes?year=${year}`}>{t('budget.summary.completeIncome')}</Link>
-            </p>
-          ) : null}
-
           <section className="budget-balance" aria-live="polite">
             <p className="budget-balance__headline">
               {settle ? t(settle.key, settle.params) : t('budget.summary.settled')}
@@ -136,12 +123,6 @@ export function BudgetSummaryPage() {
                     </dd>
                   </div>
                 </dl>
-
-                {member.missingMonths.length > 0 ? (
-                  <p className="budget-card__missing">
-                    {t('budget.summary.missingMonths', { count: member.missingMonths.length })}
-                  </p>
-                ) : null}
               </article>
             ))}
           </section>

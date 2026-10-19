@@ -31,6 +31,9 @@ const BudgetIncomesPage = lazy(() =>
 const BudgetTransfersPage = lazy(() =>
   import('./pages/BudgetTransfersPage').then((module) => ({ default: module.BudgetTransfersPage })),
 )
+const BudgetImportPage = lazy(() =>
+  import('./pages/BudgetImportPage').then((module) => ({ default: module.BudgetImportPage })),
+)
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout').then((module) => ({ default: module.SettingsLayout })))
 const HouseholdSettingsPage = lazy(() =>
   import('./pages/settings/HouseholdSettingsPage').then((module) => ({ default: module.HouseholdSettingsPage })),
@@ -47,6 +50,11 @@ const AccountsSettingsPage = lazy(() =>
 const BudgetCategoriesSettingsPage = lazy(() =>
   import('./pages/settings/BudgetCategoriesSettingsPage').then((module) => ({
     default: module.BudgetCategoriesSettingsPage,
+  })),
+)
+const HomeAssistantLogsSettingsPage = lazy(() =>
+  import('./pages/settings/HomeAssistantLogsSettingsPage').then((module) => ({
+    default: module.HomeAssistantLogsSettingsPage,
   })),
 )
 
@@ -80,12 +88,14 @@ export function App() {
               <Route path="/budget/expenses/:expenseId" element={<BudgetExpenseFormPage />} />
               <Route path="/budget/incomes" element={<BudgetIncomesPage />} />
               <Route path="/budget/transfers" element={<BudgetTransfersPage />} />
+              <Route path="/budget/import" element={<BudgetImportPage />} />
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<Navigate to="/settings/household" replace />} />
                 <Route path="household" element={<HouseholdSettingsPage />} />
                 <Route path="rooms" element={<RoomsSettingsPage />} />
                 <Route path="members" element={<MembersSettingsPage />} />
                 <Route path="budget/categories" element={<BudgetCategoriesSettingsPage />} />
+                <Route path="home-assistant-logs" element={<HomeAssistantLogsSettingsPage />} />
                 <Route path="accounts" element={<AccountsSettingsPage />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />

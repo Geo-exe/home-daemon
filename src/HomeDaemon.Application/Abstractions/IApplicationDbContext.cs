@@ -1,6 +1,7 @@
 using HomeDaemon.Domain.Budget;
 using HomeDaemon.Domain.Chores;
 using HomeDaemon.Domain.Households;
+using HomeDaemon.Domain.Integrations;
 using HomeDaemon.Domain.Scheduling;
 using HomeDaemon.Domain.Sync;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,8 @@ public interface IApplicationDbContext
     DbSet<BudgetExpense> BudgetExpenses { get; }
 
     DbSet<BudgetTransfer> BudgetTransfers { get; }
+
+    DbSet<HomeAssistantCallLog> HomeAssistantCallLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 

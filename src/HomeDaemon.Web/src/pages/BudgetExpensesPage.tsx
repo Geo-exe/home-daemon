@@ -13,6 +13,7 @@ import {
 } from '../api/budget'
 import { getHousehold, getMembers, householdQueryKey, membersQueryKey } from '../api/household'
 import type { BudgetExpense } from '../api/types'
+import { useSession } from '../auth/session-context'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
@@ -28,7 +29,9 @@ const pageSize = 50
 
 export function BudgetExpensesPage() {
   const { t, i18n } = useTranslation()
+  const { user } = useSession()
   const isOnline = useOnlineStatus()
+  const isAdmin = user?.roles.includes('Admin') ?? false
   const [searchParams] = useSearchParams()
 
   const initialYear = Number(searchParams.get('year'))
@@ -89,9 +92,16 @@ export function BudgetExpensesPage() {
         title={t('budget.expenses.title')}
         subtitle={t('budget.expenses.subtitle')}
         actions={
-          <Link className="button button--primary" to="/budget/expenses/new">
-            {t('budget.actions.addExpense')}
-          </Link>
+          <>
+            {isAdmin ? (
+              <Link className="button" to="/budget/import">
+                {t('budget.import.action')}
+              </Link>
+            ) : null}
+            <Link className="button button--primary" to="/budget/expenses/new">
+              {t('budget.actions.addExpense')}
+            </Link>
+          </>
         }
       />
 

@@ -40,7 +40,9 @@ The architecture tests in `tests/HomeDaemon.ArchitectureTests` enforce these rul
   chore.
 - **HomeDaemon → Home Assistant:** plans are written to the `todo_sync_outbox` in the same
   transaction as the plan, then dispatched by a background worker. The database and Home
-  Assistant never share a transaction.
+  Assistant never share a transaction. Every outbound call is also recorded for administrators
+  under settings, so a failing integration can be diagnosed without access to the Home
+  Assistant host; the records hold no token or payload and are deleted after 30 days.
 - **Scheduler:** the nightly job, the manual endpoint and any future trigger all call the
   same `RecalculateScheduleCommandHandler` → `RecalculationExecutor` case.
 
@@ -80,6 +82,10 @@ income and keeps a running balance that real transfers settle.
   year, which may differ from the payment date, and reduces the outstanding balance.
 - **Summary** — per year, it shows total income, total expenses, each member's share, what they
   paid, what they owe and the resulting balance, plus the totals grouped by category.
+- **CSV import** — administrators can import any CSV with one expense per row. The file's
+  columns are mapped in the browser, people and categories are matched in a preview, and
+  missing categories can be created during the import. Re-importing the same file skips rows
+  that already exist.
 
 Only members flagged as budget participants can be selected as the payer. Access is scoped to
 the household resolved from the session, so one household never sees another's data.

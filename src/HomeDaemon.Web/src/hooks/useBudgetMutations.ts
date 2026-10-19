@@ -11,6 +11,7 @@ import {
   deleteBudgetIncome,
   deleteBudgetSubcategory,
   deleteBudgetTransfer,
+  importBudgetExpenses,
   updateBudgetCategory,
   updateBudgetExpense,
   updateBudgetSubcategory,
@@ -18,6 +19,9 @@ import {
   upsertBudgetIncome,
   type BudgetCategoryWriteModel,
   type BudgetExpenseWriteModel,
+  type BudgetImportCategoryMapping,
+  type BudgetImportRow,
+  type BudgetImportSubcategoryMapping,
   type BudgetSubcategoryWriteModel,
   type BudgetTransferWriteModel,
 } from '../api/budget'
@@ -82,6 +86,19 @@ export function useDeleteBudgetExpense() {
 
   return useMutation({
     mutationFn: (expenseId: string) => deleteBudgetExpense(expenseId),
+    onSuccess: () => invalidate(),
+  })
+}
+
+export function useImportBudgetExpenses() {
+  const invalidate = useInvalidateBudget()
+
+  return useMutation({
+    mutationFn: (model: {
+      rows: BudgetImportRow[]
+      categories: BudgetImportCategoryMapping[]
+      subcategories: BudgetImportSubcategoryMapping[]
+    }) => importBudgetExpenses(model),
     onSuccess: () => invalidate(),
   })
 }

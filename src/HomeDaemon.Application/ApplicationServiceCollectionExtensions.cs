@@ -2,6 +2,7 @@ using HomeDaemon.Application.Abstractions;
 using HomeDaemon.Application.Budget;
 using HomeDaemon.Application.Chores;
 using HomeDaemon.Application.Households;
+using HomeDaemon.Application.Integrations.HomeAssistant;
 using HomeDaemon.Application.Planner;
 using HomeDaemon.Application.Recurrence;
 using HomeDaemon.Application.Scheduling;
@@ -38,8 +39,15 @@ public static class ApplicationServiceCollectionExtensions
         AddPlannerHandlers(services);
         AddSchedulingHandlers(services);
         AddBudgetHandlers(services);
+        AddHomeAssistantHandlers(services);
 
         return services;
+    }
+
+    private static void AddHomeAssistantHandlers(IServiceCollection services)
+    {
+        services.AddScoped<GetHomeAssistantCallLogsHandler>();
+        services.AddScoped<CleanupHomeAssistantCallLogsHandler>();
     }
 
     private static void AddHouseholdHandlers(IServiceCollection services)
@@ -101,10 +109,12 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<GetBudgetExpensesHandler>();
         services.AddScoped<GetBudgetExpenseHandler>();
         services.AddScoped<CreateBudgetExpenseHandler>();
+        services.AddScoped<ImportBudgetExpensesHandler>();
         services.AddScoped<UpdateBudgetExpenseHandler>();
         services.AddScoped<DeleteBudgetExpenseHandler>();
 
         services.AddScoped<GetBudgetTransfersHandler>();
+        services.AddScoped<GetBudgetTransferSuggestionsHandler>();
         services.AddScoped<CreateBudgetTransferHandler>();
         services.AddScoped<UpdateBudgetTransferHandler>();
         services.AddScoped<DeleteBudgetTransferHandler>();

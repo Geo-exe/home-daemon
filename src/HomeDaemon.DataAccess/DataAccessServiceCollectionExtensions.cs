@@ -33,6 +33,10 @@ public static class DataAccessServiceCollectionExtensions
         services.Configure<HomeAssistantOptions>(configuration.GetSection("HomeAssistant"));
         services.Configure<BackupOptions>(configuration.GetSection("Backup"));
 
+        // Diagnostics are written in their own scope so logging never joins the caller's unit
+        // of work. The detailed recorder itself is registered below the typed client.
+        services.AddSingleton<IHomeAssistantCallRecorder, DatabaseHomeAssistantCallRecorder>();
+
         services.AddHttpClient<IHomeAssistantClient, HttpHomeAssistantClient>((provider, client) =>
         {
             var options = provider.GetRequiredService<IOptions<HomeAssistantOptions>>().Value;

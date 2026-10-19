@@ -285,3 +285,29 @@ export type BudgetTransferFormValues = z.input<typeof budgetTransferFormSchema>
 export type BudgetCategoryFormValues = z.input<typeof budgetCategoryFormSchema>
 export type BudgetSubcategoryFormValues = z.input<typeof budgetSubcategoryFormSchema>
 export type BudgetIncomeFormValues = z.input<typeof budgetIncomeFormSchema>
+
+/**
+ * Early feedback for an amount field. The submit path still runs the zod schema, but this
+ * lets a form flag a malformed value as soon as the field loses focus instead of waiting for
+ * the user to press Save.
+ */
+export function amountValidationKey(
+  value: string,
+  options: { allowEmpty?: boolean; allowZero?: boolean } = {},
+): string | null {
+  const trimmed = value.trim()
+  if (trimmed === '') {
+    return options.allowEmpty ? null : 'budget.validation.amountInvalid'
+  }
+
+  const minor = parseAmountToMinor(trimmed)
+  if (minor === null) {
+    return 'budget.validation.amountInvalid'
+  }
+
+  if (!options.allowZero && minor <= 0) {
+    return 'budget.validation.amountPositive'
+  }
+
+  return null
+}

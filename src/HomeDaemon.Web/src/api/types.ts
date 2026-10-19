@@ -274,6 +274,13 @@ export interface BudgetTransfer {
   description: string | null
 }
 
+export interface BudgetTransferSuggestion {
+  fromMemberId: string
+  fromMemberName: string
+  toMemberId: string
+  toMemberName: string
+}
+
 export interface BudgetMemberSummary {
   memberId: string
   name: string
@@ -291,6 +298,35 @@ export interface BudgetCategoryTotal {
   categoryId: string
   name: string
   amountMinor: number
+}
+
+// -------------------------------------------------------------- integrations
+
+export interface HomeAssistantEntity {
+  entityId: string
+  domain: 'person' | 'todo' | 'calendar'
+  friendlyName: string | null
+}
+
+export interface HomeAssistantEntities {
+  available: boolean
+  entities: HomeAssistantEntity[]
+}
+
+export type HomeAssistantCallStatus = 'Succeeded' | 'Failed'
+
+/** One outbound call HomeDaemon made to Home Assistant, as shown in the admin log. */
+export interface HomeAssistantCallLog {
+  id: string
+  occurredAtUtc: string
+  operation: string
+  entityId: string | null
+  method: string
+  status: HomeAssistantCallStatus
+  statusCode: number | null
+  durationMs: number
+  errorMessage: string | null
+  isTransient: boolean | null
 }
 
 export interface BudgetSummary {

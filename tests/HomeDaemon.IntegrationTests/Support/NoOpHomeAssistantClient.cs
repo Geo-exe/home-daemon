@@ -5,6 +5,9 @@ namespace HomeDaemon.IntegrationTests.Support;
 /// <summary>Home Assistant stub that reports empty calendars and no to-do items.</summary>
 public sealed class NoOpHomeAssistantClient : IHomeAssistantClient
 {
+    public Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<HomeAssistantEntity>>([]);
+
     public Task<IReadOnlyList<HomeAssistantTodoItem>> GetTodoItemsAsync(string todoListEntityId, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<HomeAssistantTodoItem>>([]);
 

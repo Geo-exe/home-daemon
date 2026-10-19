@@ -6,6 +6,7 @@ import type {
   BudgetSummary,
   BudgetSubcategory,
   BudgetTransfer,
+  BudgetTransferSuggestion,
   CalendarDate,
   CursorPage,
 } from './types'
@@ -17,6 +18,7 @@ export const budgetSummaryQueryKey = (year: number) => ['budget', 'summary', yea
 export const budgetIncomesQueryKey = (year: number) => ['budget', 'incomes', year] as const
 export const budgetExpensesQueryKey = (filters: BudgetExpenseFilters) => ['budget', 'expenses', filters] as const
 export const budgetTransfersQueryKey = (settlementYear: number | null) => ['budget', 'transfers', settlementYear] as const
+export const budgetTransferSuggestionsQueryKey = ['budget', 'transfers', 'suggestions'] as const
 
 export interface BudgetExpenseFilters {
   year?: number
@@ -56,6 +58,34 @@ export interface BudgetSubcategoryWriteModel {
   name: string
   sortOrder: number
   isArchived: boolean
+}
+
+export interface BudgetImportRow {
+  line: number
+  date: CalendarDate
+  amountMinor: number
+  category: string
+  subcategory: string | null
+  paidByMemberId: string
+  description: string | null
+}
+
+export interface BudgetImportCategoryMapping {
+  sourceName: string
+  categoryId: string | null
+  create: boolean
+}
+
+export interface BudgetImportSubcategoryMapping {
+  categorySourceName: string
+  sourceName: string
+  subcategoryId: string | null
+  create: boolean
+}
+
+export interface BudgetImportResult {
+  imported: number
+  skipped: number
 }
 
 export function getBudgetYears(signal?: AbortSignal): Promise<number[]> {
@@ -153,6 +183,23 @@ export function updateBudgetExpense(expenseId: string, model: BudgetExpenseWrite
 /** Cancels an expense. Nothing is soft-deleted: the balance is recomputed without it. */
 export function deleteBudgetExpense(expenseId: string): Promise<undefined> {
   return apiDelete(`/budget/expenses/${expenseId}`)
+}
+
+/**
+ * Imports many expenses in one request. The API is administrator-only and validates the whole
+ * batch before writing anything.
+ */
+export function importBudgetExpenses(model: {
+  rows: BudgetImportRow[]
+  categories: BudgetImportCategoryMapping[]
+  subcategories: BudgetImportSubcategoryMapping[]
+}): Promise<BudgetImportResult> {
+  return apiPost<BudgetImportResult>('/budget/imports', model)
+}
+
+/** Recent distinct transfer directions, used to prefill a new transfer. */
+export function getBudgetTransferSuggestions(limit = 2, signal?: AbortSignal): Promise<BudgetTransferSuggestion[]> {
+  return apiGet<BudgetTransferSuggestion[]>(`/budget/transfers/suggestions?limit=${limit}`, signal)
 }
 
 export function listBudgetTransfers(

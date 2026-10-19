@@ -8,6 +8,9 @@ describe('parseAmountToMinor', () => {
     expect(parseAmountToMinor('12.50')).toBe(1250)
     expect(parseAmountToMinor('12,34')).toBe(1234)
     expect(parseAmountToMinor('0')).toBe(0)
+    expect(parseAmountToMinor('€ 7,99')).toBe(799)
+    expect(parseAmountToMinor('1.234,56')).toBe(123456)
+    expect(parseAmountToMinor('1,234.56')).toBe(123456)
   })
 
   it('rejects input that is not a plain non-negative amount', () => {

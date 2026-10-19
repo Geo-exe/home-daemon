@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\HomeDaemon.Application\HomeDaemon.Application.csproj" />
+    <ProjectReference Include="..\..\src\HomeDaemon.DataAccess\HomeDaemon.DataAccess.csproj" />
     <ProjectReference Include="..\..\src\HomeDaemon.Domain\HomeDaemon.Domain.csproj" />
   </ItemGroup>
 

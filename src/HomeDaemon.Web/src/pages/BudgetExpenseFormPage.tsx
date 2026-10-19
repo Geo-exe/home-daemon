@@ -16,7 +16,12 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { errorMessageKey, fieldProblems } from '../lib/errors'
 import { todayInTimeZone } from '../lib/format'
 import { minorToInputValue, parseAmountToMinor } from '../lib/money'
-import { issuesToFieldErrors, budgetExpenseFormSchema, type BudgetExpenseFormValues } from '../lib/validation'
+import {
+  amountValidationKey,
+  issuesToFieldErrors,
+  budgetExpenseFormSchema,
+  type BudgetExpenseFormValues,
+} from '../lib/validation'
 
 const expenseQueryKey = (expenseId: string) => ['budget', 'expense', expenseId] as const
 
@@ -98,6 +103,31 @@ function ExpenseForm({ expense }: { expense: BudgetExpense | null }) {
   const setField = <K extends keyof BudgetExpenseFormValues>(key: K, value: BudgetExpenseFormValues[K]) => {
     setSaved(false)
     setValues((current) => ({ ...current, [key]: value }))
+  }
+
+  const clearAmountError = () =>
+    setFieldErrors((current) => {
+      if (!current.amount) {
+        return current
+      }
+
+      const next = { ...current }
+      delete next.amount
+      return next
+    })
+
+  // Show the problem while the field is being filled in, not only after Save.
+  const validateAmount = () => {
+    const key = amountValidationKey(values.amount)
+    setFieldErrors((current) => {
+      const next = { ...current }
+      if (key) {
+        next.amount = key
+      } else {
+        delete next.amount
+      }
+      return next
+    })
   }
 
   const submit = async (addAnother: boolean) => {
@@ -215,7 +245,11 @@ function ExpenseForm({ expense }: { expense: BudgetExpense | null }) {
             placeholder="0.00"
             autoFocus={!expense}
             value={values.amount}
-            onChange={(event) => setField('amount', event.target.value)}
+            onChange={(event) => {
+              setField('amount', event.target.value)
+              clearAmountError()
+            }}
+            onBlur={validateAmount}
           />
         </Field>
 
