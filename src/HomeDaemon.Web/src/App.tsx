@@ -14,6 +14,9 @@ import { NotFoundPage } from './pages/NotFoundPage'
 const ChoresListPage = lazy(() => import('./pages/ChoresListPage').then((module) => ({ default: module.ChoresListPage })))
 const ChoreDetailPage = lazy(() => import('./pages/ChoreDetailPage').then((module) => ({ default: module.ChoreDetailPage })))
 const ChoreFormPage = lazy(() => import('./pages/ChoreFormPage').then((module) => ({ default: module.ChoreFormPage })))
+const ChoresImportPage = lazy(() =>
+  import('./pages/ChoresImportPage').then((module) => ({ default: module.ChoresImportPage })),
+)
 const PlannerPage = lazy(() => import('./pages/PlannerPage').then((module) => ({ default: module.PlannerPage })))
 const HistoryPage = lazy(() => import('./pages/HistoryPage').then((module) => ({ default: module.HistoryPage })))
 const BudgetSummaryPage = lazy(() =>
@@ -78,6 +81,7 @@ export function App() {
               <Route path="/" element={<Navigate to="/chores" replace />} />
               <Route path="/chores" element={<ChoresListPage />} />
               <Route path="/chores/new" element={<ChoreFormPage />} />
+              <Route path="/chores/import" element={<ChoresImportPage />} />
               <Route path="/chores/:choreId" element={<ChoreDetailPage />} />
               <Route path="/chores/:choreId/edit" element={<ChoreFormPage />} />
               <Route path="/planner" element={<PlannerPage />} />

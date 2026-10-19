@@ -1,5 +1,14 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { choreQueryKey, choresQueryKey, completeChore, deleteChore, restoreChore, setChoreActive } from '../api/chores'
+import {
+  choreQueryKey,
+  choresQueryKey,
+  completeChore,
+  deleteChore,
+  importChores,
+  restoreChore,
+  setChoreActive,
+} from '../api/chores'
+import { plannerQueryKey } from '../api/planner'
 import type { ChoreDetail } from '../api/types'
 
 /**
@@ -52,5 +61,17 @@ export function useRestoreChore() {
   return useMutation({
     mutationFn: (choreId: string): Promise<ChoreDetail> => restoreChore(choreId),
     onSuccess: (_result, choreId) => invalidate(choreId),
+  })
+}
+
+export function useImportChores() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: importChores,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: choresQueryKey })
+      await queryClient.invalidateQueries({ queryKey: plannerQueryKey })
+    },
   })
 }

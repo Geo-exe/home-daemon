@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { choresQueryKey, listChores } from '../api/chores'
 import { getHousehold, getMembers, getRooms, householdQueryKey, membersQueryKey, roomsQueryKey } from '../api/household'
+import { useSession } from '../auth/session-context'
 import { ChoreCard } from '../components/ChoreCard'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
@@ -14,6 +15,8 @@ type StateFilter = 'all' | 'active' | 'paused'
 
 export function ChoresListPage() {
   const { t } = useTranslation()
+  const { user } = useSession()
+  const isAdmin = user?.roles.includes('Admin') ?? false
 
   const [search, setSearch] = useState('')
   const [stateFilter, setStateFilter] = useState<StateFilter>('all')
@@ -61,9 +64,16 @@ export function ChoresListPage() {
         title={t('chores.title')}
         subtitle={t('chores.subtitle', { count: visible.length })}
         actions={
-          <Link className="button button--primary" to="/chores/new">
-            {t('chores.new')}
-          </Link>
+          <>
+            {isAdmin ? (
+              <Link className="button" to="/chores/import">
+                {t('chores.import.action')}
+              </Link>
+            ) : null}
+            <Link className="button button--primary" to="/chores/new">
+              {t('chores.new')}
+            </Link>
+          </>
         }
       />
 
