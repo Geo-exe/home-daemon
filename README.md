@@ -40,7 +40,9 @@ The architecture tests in `tests/HomeDaemon.ArchitectureTests` enforce these rul
   chore.
 - **HomeDaemon → Home Assistant:** plans are written to the `todo_sync_outbox` in the same
   transaction as the plan, then dispatched by a background worker. The database and Home
-  Assistant never share a transaction.
+  Assistant never share a transaction. Every outbound call is also recorded for administrators
+  under settings, so a failing integration can be diagnosed without access to the Home
+  Assistant host; the records hold no token or payload and are deleted after 30 days.
 - **Scheduler:** the nightly job, the manual endpoint and any future trigger all call the
   same `RecalculateScheduleCommandHandler` → `RecalculationExecutor` case.
 

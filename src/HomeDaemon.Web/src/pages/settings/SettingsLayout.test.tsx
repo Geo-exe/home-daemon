@@ -53,15 +53,17 @@ describe('SettingsLayout', () => {
     expect(screen.getByText('household content')).toBeInTheDocument()
   })
 
-  it('hides the account tab from people who are not administrators', () => {
+  it('hides the administrator tabs from people who are not administrators', () => {
     renderLayout(['User'])
 
     expect(screen.queryByRole('link', { name: 'Accounts' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Home Assistant logs' })).not.toBeInTheDocument()
   })
 
-  it('offers the account tab to administrators', () => {
+  it('offers the administrator tabs to administrators', () => {
     renderLayout(['Admin'])
 
     expect(screen.getByRole('link', { name: 'Accounts' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Home Assistant logs' })).toBeInTheDocument()
   })
 })

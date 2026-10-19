@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '../auth/session-context'
 import { ApiError } from '../api/client'
+import { BrandMark } from '../components/BrandMark'
 import { Field } from '../components/Field'
 import { describedBy } from '../lib/aria'
 import { Spinner } from '../components/Spinner'
@@ -52,6 +53,11 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-page__card">
+        <div className="auth-page__brand">
+          <BrandMark size={48} />
+          <span className="auth-page__brand-name">{t('app.name')}</span>
+        </div>
+
         <h1 className="auth-page__title">{t('login.title')}</h1>
         <p className="auth-page__subtitle">{t('login.subtitle')}</p>
 

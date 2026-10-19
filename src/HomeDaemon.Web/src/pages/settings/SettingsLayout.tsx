@@ -32,6 +32,15 @@ export function SettingsLayout() {
 
         {isAdmin ? (
           <NavLink
+            to="/settings/home-assistant-logs"
+            className={({ isActive }) => `tabs__link${isActive ? ' is-active' : ''}`}
+          >
+            {t('settings.tabs.homeAssistantLogs')}
+          </NavLink>
+        ) : null}
+
+        {isAdmin ? (
+          <NavLink
             to="/settings/accounts"
             className={({ isActive }) => `tabs__link${isActive ? ' is-active' : ''}`}
           >

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Text;
@@ -10,9 +11,11 @@ namespace HomeDaemon.DataAccess.Integrations.HomeAssistant;
 /// REST adapter for Home Assistant to-do lists and calendars. It only uses the documented
 /// service actions (<c>todo.add_item</c>, <c>todo.update_item</c>, <c>todo.remove_item</c>,
 /// <c>todo.get_items</c>) and the calendar REST endpoint, and it never treats item titles as
-/// identifiers.
+/// identifiers. Every call is optionally reported to the diagnostic recorder.
 /// </summary>
-public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssistantClient
+public sealed class HttpHomeAssistantClient(
+    HttpClient httpClient,
+    IHomeAssistantCallRecorder? callRecorder = null) : IHomeAssistantClient
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -23,7 +26,10 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
         "calendar",
     };
 
-    public async Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesAsync(CancellationToken cancellationToken) =>
+        TrackAsync("states.list", null, HttpMethod.Get.Method, () => GetEntitiesCoreAsync(cancellationToken), cancellationToken);
+
+    private async Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesCoreAsync(CancellationToken cancellationToken)
     {
         using var response = await SendAsync(HttpMethod.Get, "api/states", content: null, cancellationToken).ConfigureAwait(false);
         var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -65,7 +71,13 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
             .ToList();
     }
 
-    public async Task<IReadOnlyList<HomeAssistantTodoItem>> GetTodoItemsAsync(string todoListEntityId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<HomeAssistantTodoItem>> GetTodoItemsAsync(string todoListEntityId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(todoListEntityId);
+        return TrackAsync("todo.get_items", todoListEntityId, HttpMethod.Post.Method, () => GetTodoItemsCoreAsync(todoListEntityId, cancellationToken), cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<HomeAssistantTodoItem>> GetTodoItemsCoreAsync(string todoListEntityId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(todoListEntityId);
         var body = new Dictionary<string, object?>(StringComparer.Ordinal)
@@ -79,7 +91,14 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
         return ParseItems(json, todoListEntityId);
     }
 
-    public async Task<HomeAssistantTodoItem> CreateTodoItemAsync(string todoListEntityId, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken)
+    public Task<HomeAssistantTodoItem> CreateTodoItemAsync(string todoListEntityId, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(todoListEntityId);
+        ArgumentNullException.ThrowIfNull(draft);
+        return TrackAsync("todo.add_item", todoListEntityId, HttpMethod.Post.Method, () => CreateTodoItemCoreAsync(todoListEntityId, draft, cancellationToken), cancellationToken);
+    }
+
+    private async Task<HomeAssistantTodoItem> CreateTodoItemCoreAsync(string todoListEntityId, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(todoListEntityId);
         ArgumentNullException.ThrowIfNull(draft);
@@ -110,7 +129,15 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
         };
     }
 
-    public async Task UpdateTodoItemAsync(string todoListEntityId, string itemUid, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken)
+    public Task UpdateTodoItemAsync(string todoListEntityId, string itemUid, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(todoListEntityId);
+        ArgumentNullException.ThrowIfNull(itemUid);
+        ArgumentNullException.ThrowIfNull(draft);
+        return TrackAsync("todo.update_item", todoListEntityId, HttpMethod.Post.Method, () => UpdateTodoItemCoreAsync(todoListEntityId, itemUid, draft, cancellationToken), cancellationToken);
+    }
+
+    private async Task UpdateTodoItemCoreAsync(string todoListEntityId, string itemUid, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(todoListEntityId);
         ArgumentNullException.ThrowIfNull(itemUid);
@@ -126,7 +153,14 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
         using var response = await PostServiceAsync("todo/update_item", body, returnResponse: false, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task DeleteTodoItemAsync(string todoListEntityId, string itemUid, CancellationToken cancellationToken)
+    public Task DeleteTodoItemAsync(string todoListEntityId, string itemUid, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(todoListEntityId);
+        ArgumentNullException.ThrowIfNull(itemUid);
+        return TrackAsync("todo.remove_item", todoListEntityId, HttpMethod.Post.Method, () => DeleteTodoItemCoreAsync(todoListEntityId, itemUid, cancellationToken), cancellationToken);
+    }
+
+    private async Task DeleteTodoItemCoreAsync(string todoListEntityId, string itemUid, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(todoListEntityId);
         ArgumentNullException.ThrowIfNull(itemUid);
@@ -140,7 +174,17 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
         using var response = await PostServiceAsync("todo/remove_item", body, returnResponse: false, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<HomeAssistantCalendarEvent>> GetCalendarEventsAsync(
+    public Task<IReadOnlyList<HomeAssistantCalendarEvent>> GetCalendarEventsAsync(
+        string calendarEntityId,
+        DateOnly fromInclusive,
+        DateOnly toExclusive,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(calendarEntityId);
+        return TrackAsync("calendar.get_events", calendarEntityId, HttpMethod.Get.Method, () => GetCalendarEventsCoreAsync(calendarEntityId, fromInclusive, toExclusive, cancellationToken), cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<HomeAssistantCalendarEvent>> GetCalendarEventsCoreAsync(
         string calendarEntityId,
         DateOnly fromInclusive,
         DateOnly toExclusive,
@@ -195,6 +239,103 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
         body["status"] = draft.Status == HomeAssistantTodoStatus.Completed ? "completed" : "needs_action";
     }
 
+    /// <summary>
+    /// Runs one outbound call and reports its outcome. A successful Home Assistant call of the
+    /// kind this adapter makes is always a 200, which is what the diagnostic log records.
+    /// </summary>
+    private async Task<T> TrackAsync<T>(
+        string operation,
+        string? entityId,
+        string method,
+        Func<Task<T>> action,
+        CancellationToken cancellationToken)
+    {
+        if (callRecorder is null)
+        {
+            return await action().ConfigureAwait(false);
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            var result = await action().ConfigureAwait(false);
+            TryRecord(operation, entityId, method, succeeded: true, statusCode: 200, stopwatch.ElapsedMilliseconds, errorMessage: null, isTransient: null);
+            return result;
+        }
+        catch (HomeAssistantRequestException exception)
+        {
+            TryRecord(operation, entityId, method, succeeded: false, exception.StatusCode, stopwatch.ElapsedMilliseconds, exception.Message, exception.IsTransient);
+            throw;
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested
+            && exception is HttpRequestException or TaskCanceledException)
+        {
+            TryRecord(operation, entityId, method, succeeded: false, statusCode: null, stopwatch.ElapsedMilliseconds, exception.Message, isTransient: true);
+            throw;
+        }
+    }
+
+    private async Task TrackAsync(
+        string operation,
+        string? entityId,
+        string method,
+        Func<Task> action,
+        CancellationToken cancellationToken)
+    {
+        if (callRecorder is null)
+        {
+            await action().ConfigureAwait(false);
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            await action().ConfigureAwait(false);
+            TryRecord(operation, entityId, method, succeeded: true, statusCode: 200, stopwatch.ElapsedMilliseconds, errorMessage: null, isTransient: null);
+        }
+        catch (HomeAssistantRequestException exception)
+        {
+            TryRecord(operation, entityId, method, succeeded: false, exception.StatusCode, stopwatch.ElapsedMilliseconds, exception.Message, exception.IsTransient);
+            throw;
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested
+            && exception is HttpRequestException or TaskCanceledException)
+        {
+            TryRecord(operation, entityId, method, succeeded: false, statusCode: null, stopwatch.ElapsedMilliseconds, exception.Message, isTransient: true);
+            throw;
+        }
+    }
+
+    private void TryRecord(
+        string operation,
+        string? entityId,
+        string method,
+        bool succeeded,
+        int? statusCode,
+        long durationMs,
+        string? errorMessage,
+        bool? isTransient)
+    {
+        try
+        {
+            callRecorder?.Record(new HomeAssistantCallRecord(
+                operation,
+                entityId,
+                method,
+                succeeded,
+                statusCode,
+                durationMs,
+                errorMessage,
+                isTransient));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Diagnostics are best effort: never let them break the integration call.
+            Debug.WriteLine($"Home Assistant call log could not be recorded: {exception.Message}");
+        }
+    }
+
     private async Task<HttpResponseMessage> PostServiceAsync(string service, object body, bool returnResponse, CancellationToken cancellationToken)
     {
         var uri = returnResponse ? $"api/services/{service}?return_response" : $"api/services/{service}";
@@ -214,7 +355,10 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
             response.Dispose();
             throw new HomeAssistantRequestException(
                 $"Home Assistant returned {((int)status).ToString(CultureInfo.InvariantCulture)} for '{uri}'.",
-                isTransient: status is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)status >= 500);
+                isTransient: status is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)status >= 500)
+            {
+                StatusCode = (int)status,
+            };
         }
 
         return response;

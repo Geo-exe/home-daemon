@@ -3,14 +3,16 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
+  budgetTransferSuggestionsQueryKey,
   budgetTransfersQueryKey,
   budgetYearsQueryKey,
+  getBudgetTransferSuggestions,
   getBudgetYears,
   listBudgetTransfers,
   type BudgetTransferWriteModel,
 } from '../api/budget'
 import { getHousehold, getMembers, householdQueryKey, membersQueryKey } from '../api/household'
-import type { BudgetTransfer } from '../api/types'
+import type { BudgetTransfer, BudgetTransferSuggestion } from '../api/types'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
@@ -23,6 +25,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { errorMessageKey, fieldProblems } from '../lib/errors'
 import { formatCalendarDate, todayInTimeZone } from '../lib/format'
 import { formatMinor, minorToInputValue, parseAmountToMinor } from '../lib/money'
+import { buildTransferShortcuts } from '../lib/transfers'
 import {
   amountValidationKey,
   budgetTransferFormSchema,
@@ -48,6 +51,11 @@ export function BudgetTransfersPage() {
   const household = useQuery({ queryKey: householdQueryKey, queryFn: ({ signal }) => getHousehold(signal) })
   const years = useQuery({ queryKey: budgetYearsQueryKey, queryFn: ({ signal }) => getBudgetYears(signal) })
   const members = useQuery({ queryKey: membersQueryKey, queryFn: ({ signal }) => getMembers(signal) })
+  const suggestions = useQuery({
+    queryKey: budgetTransferSuggestionsQueryKey,
+    queryFn: ({ signal }) => getBudgetTransferSuggestions(2, signal),
+    staleTime: 60_000,
+  })
   const remove = useDeleteBudgetTransfer()
 
   const transfers = useInfiniteQuery({
@@ -186,6 +194,7 @@ export function BudgetTransfersPage() {
           key={editing.transfer?.id ?? 'new'}
           transfer={editing.transfer}
           participants={participants}
+          suggestions={suggestions.data ?? []}
           defaultYear={settlementYear ?? new Date().getFullYear()}
           timeZoneId={household.data?.timeZoneId ?? 'UTC'}
           onClose={() => setEditing({ open: false, transfer: null })}
@@ -210,12 +219,14 @@ export function BudgetTransfersPage() {
 function TransferDialog({
   transfer,
   participants,
+  suggestions,
   defaultYear,
   timeZoneId,
   onClose,
 }: {
   transfer: BudgetTransfer | null
   participants: { id: string; name: string }[]
+  suggestions: BudgetTransferSuggestion[]
   defaultYear: number
   timeZoneId: string
   onClose: () => void
@@ -234,11 +245,32 @@ function TransferDialog({
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [errorKey, setErrorKey] = useState<string | null>(null)
+  const shortcuts = useMemo(() => buildTransferShortcuts(participants, suggestions), [participants, suggestions])
+  // The manual pickers stay collapsed unless they are the only way to choose, so a household
+  // with two participants never sees them at all.
+  const [manualOpen, setManualOpen] = useState(
+    transfer !== null || values.fromMemberId === '' || values.toMemberId === '',
+  )
 
   const busy = create.isPending || update.isPending
   const errorFor = (name: string): string | undefined => (fieldErrors[name] ? t(fieldErrors[name]!) : undefined)
   const setField = <K extends keyof BudgetTransferFormValues>(key: K, value: BudgetTransferFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
+
+  const choosePair = (pair: BudgetTransferSuggestion) => {
+    setValues((current) => ({
+      ...current,
+      fromMemberId: pair.fromMemberId,
+      toMemberId: pair.toMemberId,
+    }))
+    setFieldErrors((current) => {
+      const next = { ...current }
+      delete next.fromMemberId
+      delete next.toMemberId
+      return next
+    })
+    setManualOpen(false)
+  }
 
   const clearAmountError = () =>
     setFieldErrors((current) => {
@@ -365,37 +397,70 @@ function TransferDialog({
           />
         </Field>
 
-        <Field label={t('budget.field.from')} htmlFor="transfer-from" error={errorFor('fromMemberId')}>
-          <select
-            id="transfer-from"
-            className="input"
-            value={values.fromMemberId}
-            onChange={(event) => setField('fromMemberId', event.target.value)}
-          >
-            <option value="">{t('budget.field.selectPerson')}</option>
-            {participants.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {shortcuts.length > 0 ? (
+          <div className="field">
+            <span className="field__label">{t('budget.transfers.suggestions')}</span>
+            <div className="transfer-suggestions">
+              {shortcuts.map((pair) => {
+                const isSelected =
+                  values.fromMemberId === pair.fromMemberId && values.toMemberId === pair.toMemberId
+                return (
+                  <button
+                    type="button"
+                    key={`${pair.fromMemberId}-${pair.toMemberId}`}
+                    className={`button${isSelected ? ' button--primary' : ''}`}
+                    aria-pressed={isSelected}
+                    onClick={() => choosePair(pair)}
+                  >
+                    {t('budget.transfers.direction', { from: pair.fromMemberName, to: pair.toMemberName })}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
 
-        <Field label={t('budget.field.to')} htmlFor="transfer-to" error={errorFor('toMemberId')}>
-          <select
-            id="transfer-to"
-            className="input"
-            value={values.toMemberId}
-            onChange={(event) => setField('toMemberId', event.target.value)}
+        {participants.length !== 2 ? (
+          <details
+            className="transfer-manual"
+            open={manualOpen || Boolean(fieldErrors.fromMemberId) || Boolean(fieldErrors.toMemberId)}
+            onToggle={(event) => setManualOpen(event.currentTarget.open)}
           >
-            <option value="">{t('budget.field.selectPerson')}</option>
-            {participants.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+            <summary>{t('budget.transfers.chooseOtherPair')}</summary>
+
+            <Field label={t('budget.field.from')} htmlFor="transfer-from" error={errorFor('fromMemberId')}>
+              <select
+                id="transfer-from"
+                className="input"
+                value={values.fromMemberId}
+                onChange={(event) => setField('fromMemberId', event.target.value)}
+              >
+                <option value="">{t('budget.field.selectPerson')}</option>
+                {participants.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={t('budget.field.to')} htmlFor="transfer-to" error={errorFor('toMemberId')}>
+              <select
+                id="transfer-to"
+                className="input"
+                value={values.toMemberId}
+                onChange={(event) => setField('toMemberId', event.target.value)}
+              >
+                <option value="">{t('budget.field.selectPerson')}</option>
+                {participants.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </details>
+        ) : null}
 
         <Field label={t('budget.field.description')} htmlFor="transfer-description" error={errorFor('description')}>
           <input

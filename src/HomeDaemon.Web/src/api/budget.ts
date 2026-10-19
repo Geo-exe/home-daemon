@@ -6,6 +6,7 @@ import type {
   BudgetSummary,
   BudgetSubcategory,
   BudgetTransfer,
+  BudgetTransferSuggestion,
   CalendarDate,
   CursorPage,
 } from './types'
@@ -17,6 +18,7 @@ export const budgetSummaryQueryKey = (year: number) => ['budget', 'summary', yea
 export const budgetIncomesQueryKey = (year: number) => ['budget', 'incomes', year] as const
 export const budgetExpensesQueryKey = (filters: BudgetExpenseFilters) => ['budget', 'expenses', filters] as const
 export const budgetTransfersQueryKey = (settlementYear: number | null) => ['budget', 'transfers', settlementYear] as const
+export const budgetTransferSuggestionsQueryKey = ['budget', 'transfers', 'suggestions'] as const
 
 export interface BudgetExpenseFilters {
   year?: number
@@ -193,6 +195,11 @@ export function importBudgetExpenses(model: {
   subcategories: BudgetImportSubcategoryMapping[]
 }): Promise<BudgetImportResult> {
   return apiPost<BudgetImportResult>('/budget/imports', model)
+}
+
+/** Recent distinct transfer directions, used to prefill a new transfer. */
+export function getBudgetTransferSuggestions(limit = 2, signal?: AbortSignal): Promise<BudgetTransferSuggestion[]> {
+  return apiGet<BudgetTransferSuggestion[]>(`/budget/transfers/suggestions?limit=${limit}`, signal)
 }
 
 export function listBudgetTransfers(

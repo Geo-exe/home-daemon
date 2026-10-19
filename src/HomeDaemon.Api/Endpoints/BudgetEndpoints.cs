@@ -66,6 +66,7 @@ public static class BudgetEndpoints
 
     private static void MapTransfers(RouteGroupBuilder group)
     {
+        group.MapGet("/transfers/suggestions", GetTransferSuggestionsAsync);
         group.MapGet("/transfers", ListTransfersAsync);
         group.MapPost("/transfers", CreateTransferAsync);
         group.MapPut("/transfers/{transferId:guid}", UpdateTransferAsync);
@@ -319,6 +320,18 @@ public static class BudgetEndpoints
 
         var result = await handler.HandleAsync(command, cancellationToken).ConfigureAwait(false);
         return Results.Ok(new ImportBudgetExpensesResponse(result.Imported, result.Skipped));
+    }
+
+    private static async Task<IResult> GetTransferSuggestionsAsync(
+        int? limit,
+        GetHouseholdHandler getHousehold,
+        GetBudgetTransferSuggestionsHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var household = await getHousehold.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
+        return Results.Ok(await handler.HandleAsync(
+            new GetBudgetTransferSuggestionsQuery(household.Id, limit),
+            cancellationToken).ConfigureAwait(false));
     }
 
     private static async Task<IResult> ListTransfersAsync(

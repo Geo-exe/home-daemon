@@ -110,6 +110,7 @@ builder.Services.AddHostedService<ScheduleRunWorker>();
 builder.Services.AddHostedService<TodoSyncWorker>();
 builder.Services.AddHostedService<NightlySchedulingWorker>();
 builder.Services.AddHostedService<DatabaseBackupWorker>();
+builder.Services.AddHostedService<HomeAssistantLogCleanupWorker>();
 
 var app = builder.Build();
 
@@ -141,6 +142,7 @@ app.UseAuthorization();
 app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapAdminUserEndpoints();
+app.MapAdminHomeAssistantLogEndpoints();
 
 app.MapHouseholdEndpoints();
 app.MapChoreEndpoints();

@@ -104,6 +104,45 @@ public sealed class BudgetHttpTests
         Member(settled!, "Budget Bob").BalanceMinor.Should().Be(0);
     }
 
+    [Fact]
+    public async Task TransferSuggestionsReturnTheMostRecentDistinctDirections()
+    {
+        using var admin = await _factory.SignInAsAdminAsync();
+
+        var alice = await CreateParticipantAsync(admin, "Suggestion Alice");
+        var bob = await CreateParticipantAsync(admin, "Suggestion Bob");
+        var carol = await CreateParticipantAsync(admin, "Suggestion Carol");
+
+        // Far-future dates keep these transfers ahead of anything another test wrote.
+        await CreateTransferAsync(admin, alice.Id, bob.Id, new DateOnly(2099, 1, 1));
+        await CreateTransferAsync(admin, bob.Id, carol.Id, new DateOnly(2099, 2, 1));
+
+        var suggestions = await admin.GetFromJsonAsync<List<BudgetTransferSuggestionResponse>>(
+            "/api/v1/budget/transfers/suggestions?limit=2",
+            TestContext.Current.CancellationToken);
+
+        suggestions.Should().HaveCount(2);
+        suggestions![0].FromMemberId.Should().Be(bob.Id);
+        suggestions[0].ToMemberId.Should().Be(carol.Id);
+        suggestions[1].FromMemberId.Should().Be(alice.Id);
+        suggestions[1].ToMemberId.Should().Be(bob.Id);
+    }
+
+    private static async Task CreateTransferAsync(HttpClient admin, Guid from, Guid to, DateOnly date)
+    {
+        var response = await HomeDaemonApiFactory.PostAsync(admin, "/api/v1/budget/transfers", new
+        {
+            date,
+            settlementYear = date.Year,
+            amountMinor = 1000,
+            fromMemberId = from,
+            toMemberId = to,
+            description = (string?)null,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
     private static BudgetMemberSummaryResponse Member(BudgetSummaryResponse summary, string name) =>
         summary.Members.Single(member => member.Name == name);
 
@@ -139,3 +178,9 @@ public sealed class BudgetHttpTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }
+
+internal sealed record BudgetTransferSuggestionResponse(
+    Guid FromMemberId,
+    string FromMemberName,
+    Guid ToMemberId,
+    string ToMemberName);

@@ -13,6 +13,7 @@
     "deleting": "Deleting…",
     "retry": "Try again",
     "close": "Close",
+    "refresh": "Refresh",
     "search": "Search",
     "back": "Back",
     "confirm": "Confirm",
@@ -273,6 +274,7 @@
       "rooms": "Rooms",
       "members": "People",
       "budget": "Budget categories",
+      "homeAssistantLogs": "Home Assistant logs",
       "accounts": "Accounts"
     },
     "household": {
@@ -354,6 +356,20 @@
         "entityTooLong": "Keep the entity identifier under 200 characters.",
         "calendarsTooLong": "That is too many calendars."
       }
+    },
+    "homeAssistantLogs": {
+      "title": "Home Assistant logs",
+      "subtitle": "Outbound calls HomeDaemon made to Home Assistant, newest first. Kept for 30 days.",
+      "status": "Outcome",
+      "anyStatus": "All outcomes",
+      "failed": "Failed",
+      "succeeded": "Succeeded",
+      "operation": "Operation",
+      "entity": "Entity",
+      "duration": "{{milliseconds}} ms",
+      "statusCode": "HTTP {{code}}",
+      "transient": "Transient",
+      "empty": "No Home Assistant call matches these filters."
     },
     "accounts": {
       "title": "Accounts",
@@ -480,6 +496,8 @@
       "direction": "{{from}} → {{to}}",
       "newTitle": "New transfer",
       "editTitle": "Edit transfer",
+      "suggestions": "Suggested transfers",
+      "chooseOtherPair": "Choose another pair",
       "cancelTitle": "Cancel this transfer?",
       "cancelBody": "The transfer is removed and the yearly balance is recomputed."
     },

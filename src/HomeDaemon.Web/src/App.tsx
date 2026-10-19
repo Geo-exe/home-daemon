@@ -52,6 +52,11 @@ const BudgetCategoriesSettingsPage = lazy(() =>
     default: module.BudgetCategoriesSettingsPage,
   })),
 )
+const HomeAssistantLogsSettingsPage = lazy(() =>
+  import('./pages/settings/HomeAssistantLogsSettingsPage').then((module) => ({
+    default: module.HomeAssistantLogsSettingsPage,
+  })),
+)
 
 function RouteFallback() {
   const { t } = useTranslation()
@@ -90,6 +95,7 @@ export function App() {
                 <Route path="rooms" element={<RoomsSettingsPage />} />
                 <Route path="members" element={<MembersSettingsPage />} />
                 <Route path="budget/categories" element={<BudgetCategoriesSettingsPage />} />
+                <Route path="home-assistant-logs" element={<HomeAssistantLogsSettingsPage />} />
                 <Route path="accounts" element={<AccountsSettingsPage />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />

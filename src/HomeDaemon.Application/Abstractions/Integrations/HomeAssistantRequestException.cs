@@ -26,4 +26,7 @@ public sealed class HomeAssistantRequestException : Exception
         : base(message, innerException) => IsTransient = isTransient;
 
     public bool IsTransient { get; }
+
+    /// <summary>HTTP status Home Assistant returned, or null when no response was received.</summary>
+    public int? StatusCode { get; init; }
 }

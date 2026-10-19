@@ -31,4 +31,10 @@ public static partial class ApiLog
 
     [LoggerMessage(EventId = 9009, Level = LogLevel.Warning, Message = "Could not list Home Assistant entities.")]
     public static partial void HomeAssistantEntitiesFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 9010, Level = LogLevel.Information, Message = "Removed {Count} Home Assistant call logs older than the retention window.")]
+    public static partial void HomeAssistantLogsRemoved(ILogger logger, int count);
+
+    [LoggerMessage(EventId = 9011, Level = LogLevel.Warning, Message = "Could not remove expired Home Assistant call logs.")]
+    public static partial void HomeAssistantLogCleanupFailed(ILogger logger, Exception exception);
 }

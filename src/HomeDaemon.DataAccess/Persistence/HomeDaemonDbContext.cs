@@ -2,6 +2,7 @@ using HomeDaemon.Application.Abstractions;
 using HomeDaemon.Domain.Budget;
 using HomeDaemon.Domain.Chores;
 using HomeDaemon.Domain.Households;
+using HomeDaemon.Domain.Integrations;
 using HomeDaemon.Domain.Scheduling;
 using HomeDaemon.Domain.Sync;
 using Microsoft.AspNetCore.Identity;
@@ -46,6 +47,8 @@ public sealed class HomeDaemonDbContext(DbContextOptions<HomeDaemonDbContext> op
     public DbSet<BudgetExpense> BudgetExpenses => Set<BudgetExpense>();
 
     public DbSet<BudgetTransfer> BudgetTransfers => Set<BudgetTransfer>();
+
+    public DbSet<HomeAssistantCallLog> HomeAssistantCallLogs => Set<HomeAssistantCallLog>();
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken) =>
         Database.BeginTransactionAsync(cancellationToken);
