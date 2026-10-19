@@ -68,6 +68,7 @@ public static class ApplicationServiceCollectionExtensions
     private static void AddChoreHandlers(IServiceCollection services)
     {
         services.AddScoped<CreateChoreHandler>();
+        services.AddScoped<ImportChoresHandler>();
         services.AddScoped<UpdateChoreHandler>();
         services.AddScoped<DeleteChoreHandler>();
         services.AddScoped<RestoreChoreHandler>();

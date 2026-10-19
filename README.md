@@ -57,6 +57,21 @@ The architecture tests in `tests/HomeDaemon.ArchitectureTests` enforce these rul
 Domain dates are `DateOnly`; technical timestamps are UTC `DateTimeOffset`. `DateTimeOffset`
 is stored as sortable ticks so SQLite can order and range-compare it.
 
+## Chore import
+
+Administrators can bulk import chore definitions and their execution history from a CSV in
+the web app (`/chores/import`). The browser parses and previews the file; the API validates the
+whole batch again and writes it in one unit of work.
+
+- Rows are matched to existing rooms and members in the preview; missing rooms can be created.
+- An imported execution keeps its historical date and is recorded like a Home Assistant
+  callback: source `HomeAssistant`, with no member or account attributed.
+- A chore with no executions receives one synthetic completion on its source creation date,
+  repairing exports where the chore was inserted but never tracked.
+- Chores are deduplicated by title within the household, so re-importing the same file does not
+  duplicate definitions or history.
+- One schedule recalculation is started for the whole batch, not one per chore.
+
 ## Recurrence and availability
 
 - Frequencies: daily, weekly, monthly, yearly and fixed day interval, in `Dynamic`

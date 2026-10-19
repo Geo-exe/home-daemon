@@ -1,5 +1,14 @@
 import { apiDelete, apiGet, apiPost, apiPut } from './client'
-import type { ChoreCompletionResult, ChoreDetail, ChoreListItem, ChoreWriteModel, CalendarDate } from './types'
+import type {
+  AssignmentPolicy,
+  ChoreCompletionResult,
+  ChoreDetail,
+  ChoreListItem,
+  ChoreWriteModel,
+  CalendarDate,
+  RecurrenceFrequency,
+  RecurrenceMode,
+} from './types'
 
 export const choresQueryKey = ['chores'] as const
 
@@ -38,6 +47,48 @@ export function updateChore(choreId: string, model: ChoreWriteModel): Promise<Ch
 /** Deletion is a soft delete: the chore disappears but its history is kept. */
 export function deleteChore(choreId: string): Promise<undefined> {
   return apiDelete(`/chores/${choreId}`)
+}
+
+export interface ChoreImportRoomMapping {
+  sourceName: string
+  roomId: string | null
+  create: boolean
+}
+
+export interface ChoreImportRow {
+  line: number
+  sourceId: string
+  title: string
+  description: string | null
+  room: string | null
+  estimatedMinutes: number
+  isActive: boolean
+  effortWeight: number | null
+  preferSameRoomGrouping: boolean
+  frequency: RecurrenceFrequency
+  interval: number
+  mode: RecurrenceMode
+  anchorDate: CalendarDate | null
+  assignmentPolicy: AssignmentPolicy
+  fixedAssigneeMemberId: string | null
+  syntheticCompletionDate: CalendarDate | null
+  completions: CalendarDate[]
+}
+
+export interface ChoreImportResult {
+  imported: number
+  skipped: number
+  completionsImported: number
+  completionsSkipped: number
+  recalculationRunId: string | null
+}
+
+/** Administrator-only bulk import of chore definitions and their execution history. */
+export function importChores(model: {
+  chores: ChoreImportRow[]
+  rooms: ChoreImportRoomMapping[]
+}): Promise<ChoreImportResult> {
+  return apiPost<ChoreImportResult>('/chores/imports', model)
 }
 
 export function restoreChore(choreId: string): Promise<ChoreDetail> {

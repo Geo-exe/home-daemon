@@ -1,9 +1,12 @@
 using System.Security.Claims;
+using HomeDaemon.Api.Auth;
 using HomeDaemon.Application.Chores;
 using HomeDaemon.Application.Common;
 using HomeDaemon.Application.Households;
+using HomeDaemon.Application.Scheduling;
 using HomeDaemon.DataAccess.Persistence;
 using HomeDaemon.Domain.Chores;
+using HomeDaemon.Domain.Scheduling;
 using Microsoft.AspNetCore.Identity;
 
 namespace HomeDaemon.Api.Endpoints;
@@ -14,6 +17,7 @@ public static class ChoreEndpoints
     {
         var group = app.MapGroup("/api/v1/chores").WithTags("Chores");
         MapListAndCreate(group);
+        MapImports(group);
         MapItemOperations(group);
         MapHistory(group);
         return group;
@@ -59,6 +63,63 @@ public static class ChoreEndpoints
 
             return Results.Created($"/api/v1/chores/{created.Id}", created);
         });
+    }
+
+    private static void MapImports(RouteGroupBuilder group)
+    {
+        // Importing rewrites the household's whole chore catalog, so it is administrator-only
+        // even though individual chore writes are available to every signed-in user.
+        group.MapPost("/imports", ImportChoresAsync)
+            .RequireAuthorization(AccountRoles.AdminPolicy);
+    }
+
+    private static async Task<IResult> ImportChoresAsync(
+        ImportChoresRequest request,
+        GetHouseholdHandler getHousehold,
+        ImportChoresHandler handler,
+        RecalculateScheduleCommandHandler recalculate,
+        CancellationToken cancellationToken)
+    {
+        var household = await getHousehold.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
+        var result = await handler.HandleAsync(
+            new ImportChoresCommand(
+                household.Id,
+                (request.Chores ?? []).Select(row => new ImportChoreRow(
+                    row.Line,
+                    row.SourceId,
+                    row.Title,
+                    row.Description,
+                    row.Room,
+                    row.EstimatedMinutes,
+                    row.IsActive,
+                    row.EffortWeight,
+                    row.PreferSameRoomGrouping,
+                    row.Frequency,
+                    row.Interval,
+                    row.Mode,
+                    row.AnchorDate,
+                    row.AssignmentPolicy,
+                    row.FixedAssigneeMemberId,
+                    row.SyntheticCompletionDate,
+                    row.Completions ?? [])).ToList(),
+                (request.Rooms ?? []).Select(mapping => new ImportChoreRoomMapping(
+                    mapping.SourceName,
+                    mapping.RoomId,
+                    mapping.Create)).ToList()),
+            cancellationToken).ConfigureAwait(false);
+
+        // One recalculation for the whole file, not one per chore: imported chores are
+        // deliberately left unplanned until the scheduler places them.
+        Guid? runId = result.Imported > 0
+            ? await recalculate.HandleAsync(new RecalculateScheduleCommand(ScheduleRunTrigger.Manual), cancellationToken).ConfigureAwait(false)
+            : null;
+
+        return Results.Ok(new ImportChoresResponse(
+            result.Imported,
+            result.Skipped,
+            result.CompletionsImported,
+            result.CompletionsSkipped,
+            runId));
     }
 
     private static void MapItemOperations(RouteGroupBuilder group)
