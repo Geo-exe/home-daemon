@@ -223,8 +223,9 @@ Install it through HACS as a custom repository (category *Integration*) or copy
 restart. Removing the integration from Home Assistant leaves HomeDaemon untouched.
 
 The integration is validated in CI and on release with `pytest`, `hassfest` and the HACS
-action. The `version` in `manifest.json` must match the release tag (without the leading
-`v`); the release workflow rejects a tag whose version was not bumped.
+action. Releases publish `home_daemon.zip`, a flat archive of the integration whose
+`manifest.json` version is stamped from the tag automatically; the version committed in the
+repository is only the latest known one, so a release does not depend on a manual bump.
 
 ## Continuous integration (pull requests)
 
@@ -258,7 +259,8 @@ Pushing a **release tag** whose commit is on `main` runs
    `linux/arm64` and pushed to GitHub Container Registry (GHCR) as
    `ghcr.io/geo-exe/home-daemon`, tagged with the full version, `major.minor`, `major`,
    `latest` (non-prerelease tags only) and `sha-<short>`.
-5. **Create GitHub release** — a release with auto-generated notes. HACS tracks the release
+5. **Create GitHub release** — a release with auto-generated notes and the `home_daemon.zip`
+   asset. HACS tracks the release tag, and the archive manifest version is stamped from that
    tag, so the same tag publishes the container image and the custom integration.
 
 ```bash

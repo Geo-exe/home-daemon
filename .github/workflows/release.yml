@@ -94,15 +94,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check the integration version matches the tag
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          version=$(python -c "import json; print(json.load(open('custom_components/home_daemon/manifest.json'))['version'])")
-          if [ "$tag" != "$version" ]; then
-            echo "::error title=Version mismatch::Tag $GITHUB_REF_NAME requires manifest.json version '$tag', found '$version'."
-            exit 1
-          fi
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -192,12 +183,64 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Build the HACS archive
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import shutil
+          import tempfile
+          import zipfile
+
+          version = os.environ["TAG"].removeprefix("v")
+          if not version:
+              raise SystemExit("The release tag has no version.")
+
+          source = pathlib.Path("custom_components/home_daemon")
+          package = pathlib.Path(tempfile.mkdtemp()) / "package"
+          shutil.copytree(source, package)
+
+          # The checked-in manifest carries the version of the latest release. The archive
+          # that HACS installs is stamped from the tag, so releases do not depend on a
+          # manual bump that can drift or be forgotten.
+          manifest_path = package / "manifest.json"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          manifest["version"] = version
+          manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+          for cache in package.rglob("__pycache__"):
+              shutil.rmtree(cache, ignore_errors=True)
+
+          archive = pathlib.Path("home_daemon.zip")
+          with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zip_file:
+              for path in sorted(package.rglob("*")):
+                  if path.is_file():
+                      zip_file.write(path, path.relative_to(package))
+
+          with zipfile.ZipFile(archive) as zip_file:
+              names = zip_file.namelist()
+
+          # HACS extracts the archive directly into custom_components/home_daemon, so the
+          # files must be at the zip root, not wrapped in a custom_components/ folder.
+          assert "manifest.json" in names, names
+          assert not any(name.startswith("custom_components/") for name in names), names
+          assert not any("__pycache__" in name or name.endswith(".pyc") for name in names), names
+          print(f"Built {archive} for version {version}: {len(names)} files")
+          PY
+
       - name: Create release for the tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "Release $GITHUB_REF_NAME already exists, nothing to do."
+            echo "Release $GITHUB_REF_NAME already exists; ensuring the HACS archive is attached."
+            gh release upload "$GITHUB_REF_NAME" home_daemon.zip --clobber
           else
-            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+            gh release create "$GITHUB_REF_NAME" home_daemon.zip \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes \
+              --verify-tag
           fi
