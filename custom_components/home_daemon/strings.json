@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to HomeDaemon",
+        "description": "Enter the HomeDaemon address and the machine API key it was configured with.",
+        "data": {
+          "base_url": "Base URL",
+          "api_key": "API key"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure HomeDaemon",
+        "description": "Update the HomeDaemon address or the machine API key.",
+        "data": {
+          "base_url": "Base URL",
+          "api_key": "API key"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate HomeDaemon",
+        "description": "HomeDaemon rejected the stored API key. Enter a valid one.",
+        "data": {
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach HomeDaemon. Check the address and that the service is running.",
+      "invalid_auth": "HomeDaemon rejected the API key.",
+      "invalid_url": "That is not a valid URL.",
+      "unknown": "Unexpected error while talking to HomeDaemon."
+    },
+    "abort": {
+      "already_configured": "This HomeDaemon household is already configured.",
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "reauth_successful": "Re-authentication was successful.",
+      "unique_id_mismatch": "This URL and API key point to a different HomeDaemon household."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "reachable": {
+        "name": "API reachable"
+      },
+      "ready": {
+        "name": "Ready"
+      }
+    },
+    "sensor": {
+      "last_recalculation": {
+        "name": "Last recalculation"
+      }
+    }
+  },
+  "services": {
+    "start_recalculation": {
+      "name": "Start recalculation",
+      "description": "Ask HomeDaemon to recalculate the chore schedule now.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "Optional HomeDaemon config entry id."
+        }
+      }
+    }
+  }
+}

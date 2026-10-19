@@ -1,6 +1,7 @@
 using HomeDaemon.Application.Abstractions;
 using HomeDaemon.Application.Abstractions.Integrations;
 using HomeDaemon.Application.Chores;
+using HomeDaemon.Application.Households;
 using HomeDaemon.Application.Planner;
 using HomeDaemon.DataAccess.Integrations.HomeAssistant;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,15 @@ public static class HomeAssistantEndpoints
 
         group.MapGet("/entities", ListEntitiesAsync);
 
+        // The integration's connection test: unlike the anonymous health probes this proves
+        // that the machine API key is valid and names the household the instance serves.
+        group.MapGet("/handshake", async (GetHouseholdHandler handler, CancellationToken cancellationToken) =>
+        {
+            var household = await handler.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
+            var version = typeof(HomeAssistantEndpoints).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+            return Results.Ok(new HomeAssistantHandshakeResponse(household.Id, household.Name, version));
+        });
+
         group.MapPost("/todo-completions", async (
             TodoCompletionRequest request,
             RecordHomeAssistantCompletionHandler handler,
@@ -25,7 +35,9 @@ public static class HomeAssistantEndpoints
                 new RecordHomeAssistantCompletionCommand(request.TodoListEntityId, request.ItemUid, request.CompletedByMemberId, request.IdempotencyKey),
                 cancellationToken).ConfigureAwait(false);
 
-            return Results.Ok(result);
+            // No link means the item belongs to a list HomeDaemon does not manage: discarded
+            // quietly so the integration never retries an event it can never record.
+            return result is null ? Results.NoContent() : Results.Ok(result);
         });
 
         group.MapPost("/todo-overrides", async (

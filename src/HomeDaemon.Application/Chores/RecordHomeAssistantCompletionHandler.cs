@@ -11,15 +11,35 @@ public sealed class RecordHomeAssistantCompletionHandler(
     ChoreCompletionService completion,
     TimeProvider timeProvider)
 {
-    public async Task<ChoreCompletionResult> HandleAsync(RecordHomeAssistantCompletionCommand command, CancellationToken cancellationToken)
+    /// <summary>
+    /// Records a completion reported by Home Assistant. Returns <see langword="null"/> when the
+    /// item is not one HomeDaemon placed: an unmapped to-do list is a normal event (the user may
+    /// own other lists), not an error the integration should retry.
+    /// </summary>
+    public async Task<ChoreCompletionResult?> HandleAsync(RecordHomeAssistantCompletionCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var link = await db.TodoItemLinks
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.TodoListEntityId == command.TodoListEntityId && item.ItemUid == command.ItemUid, cancellationToken)
-            .ConfigureAwait(false)
-            ?? throw new EntityNotFoundException("No chore is associated with the provided to-do item.");
+            .ConfigureAwait(false);
+
+        if (link is null)
+        {
+            return null;
+        }
+
+        // Lists belong to members, so the list itself identifies who completed the chore when
+        // Home Assistant does not send an explicit member id.
+        var memberId = command.CompletedByMemberId
+            ?? await db.HouseholdMembers
+                .AsNoTracking()
+                .Where(member => member.HouseholdId == link.HouseholdId
+                    && member.TodoListEntityId == command.TodoListEntityId)
+                .Select(member => (Guid?)member.Id)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
 
         var household = await HouseholdLookup.GetRequiredAsync(db, cancellationToken).ConfigureAwait(false);
         var today = HouseholdClock.Today(household, timeProvider);
@@ -28,7 +48,7 @@ public sealed class RecordHomeAssistantCompletionHandler(
             : command.IdempotencyKey;
 
         return await completion
-            .CompleteAsync(link.ChoreDefinitionId, today, command.CompletedByMemberId, CompletionSource.HomeAssistant, idempotencyKey, cancellationToken)
+            .CompleteAsync(link.ChoreDefinitionId, today, memberId, CompletionSource.HomeAssistant, idempotencyKey, cancellationToken)
             .ConfigureAwait(false);
     }
 }
