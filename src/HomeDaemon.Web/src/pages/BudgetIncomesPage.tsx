@@ -10,6 +10,7 @@ import { Spinner } from '../components/Spinner'
 import { useDeleteBudgetIncome, useUpsertBudgetIncome } from '../hooks/useBudgetMutations'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { minorToInputValue, parseAmountToMinor } from '../lib/money'
+import { amountValidationKey } from '../lib/validation'
 
 export function BudgetIncomesPage() {
   const { t } = useTranslation()
@@ -39,7 +40,7 @@ export function BudgetIncomesPage() {
     <>
       <PageHeader title={t('budget.incomes.title')} subtitle={t('budget.incomes.subtitle')} />
 
-      <p className="notice notice--warning" role="note">
+      <p className="notice" role="note">
         {t('budget.incomes.retroactive')}
       </p>
 
@@ -122,6 +123,11 @@ function IncomeCell({
       return
     }
 
+    if (amountValidationKey(trimmed, { allowZero: true }) !== null) {
+      setInvalid(true)
+      return
+    }
+
     const minor = parseAmountToMinor(trimmed)
     if (minor === null) {
       setInvalid(true)
@@ -139,7 +145,7 @@ function IncomeCell({
   const busy = upsert.isPending || removeIncome.isPending
 
   return (
-    <li className={cell.amountMinor === null ? 'budget-income__month is-missing' : 'budget-income__month'}>
+    <li className="budget-income__month">
       <label className="budget-income__label" htmlFor={inputId}>
         {label}
       </label>
@@ -153,7 +159,12 @@ function IncomeCell({
         disabled={!isOnline || busy}
         aria-invalid={invalid}
         aria-label={t('budget.incomes.amountFor', { month: label })}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => {
+          setValue(event.target.value)
+          if (invalid) {
+            setInvalid(false)
+          }
+        }}
         onBlur={() => {
           void commit()
         }}

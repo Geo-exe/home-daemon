@@ -81,14 +81,13 @@ afterEach(() => {
 })
 
 describe('BudgetSummaryPage', () => {
-  it('states who owes whom and warns that the year is provisional', async () => {
+  it('states who owes whom without nagging about incomplete income months', async () => {
     stubApi()
     renderPage()
 
     expect(await screen.findByText('Bob owes €400.00 to Alice')).toBeInTheDocument()
-    expect(
-      screen.getByText(/The balance is provisional: some income months are still missing\./),
-    ).toBeInTheDocument()
+    expect(screen.queryByText(/provisional/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/months without income/i)).not.toBeInTheDocument()
   })
 
   it('shows each person share and balance', async () => {
@@ -98,7 +97,7 @@ describe('BudgetSummaryPage', () => {
     expect(await screen.findByText('60% of the year')).toBeInTheDocument()
     expect(screen.getByText('40% of the year')).toBeInTheDocument()
     expect(screen.getByText('€400.00')).toBeInTheDocument()
-    expect(screen.getByText('2 months without income')).toBeInTheDocument()
+    expect(screen.queryByText(/months without income/i)).not.toBeInTheDocument()
   })
 
   it('explains when the shares cannot be computed yet', async () => {
@@ -113,9 +112,7 @@ describe('BudgetSummaryPage', () => {
     })
     renderPage()
 
-    expect(
-      await screen.findByText('No income has been recorded for this year, so the shares cannot be computed yet.'),
-    ).toBeInTheDocument()
+    expect(await screen.findAllByText('No income recorded')).toHaveLength(2)
     expect(screen.getByText('Everything is settled for this year.')).toBeInTheDocument()
   })
 })

@@ -28,4 +28,7 @@ public static partial class ApiLog
 
     [LoggerMessage(EventId = 9008, Level = LogLevel.Error, Message = "To-do sync pass failed.")]
     public static partial void TodoSyncPassFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 9009, Level = LogLevel.Warning, Message = "Could not list Home Assistant entities.")]
+    public static partial void HomeAssistantEntitiesFailed(ILogger logger, Exception exception);
 }

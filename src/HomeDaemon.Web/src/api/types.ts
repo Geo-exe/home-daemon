@@ -293,6 +293,19 @@ export interface BudgetCategoryTotal {
   amountMinor: number
 }
 
+// -------------------------------------------------------------- integrations
+
+export interface HomeAssistantEntity {
+  entityId: string
+  domain: 'person' | 'todo' | 'calendar'
+  friendlyName: string | null
+}
+
+export interface HomeAssistantEntities {
+  available: boolean
+  entities: HomeAssistantEntity[]
+}
+
 export interface BudgetSummary {
   year: number
   currency: string

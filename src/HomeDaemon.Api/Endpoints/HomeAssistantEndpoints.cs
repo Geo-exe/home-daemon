@@ -1,7 +1,10 @@
 using HomeDaemon.Application.Abstractions;
+using HomeDaemon.Application.Abstractions.Integrations;
 using HomeDaemon.Application.Chores;
 using HomeDaemon.Application.Planner;
+using HomeDaemon.DataAccess.Integrations.HomeAssistant;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace HomeDaemon.Api.Endpoints;
 
@@ -10,6 +13,8 @@ public static class HomeAssistantEndpoints
     public static IEndpointRouteBuilder MapHomeAssistantEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/integrations/home-assistant").WithTags("Home Assistant");
+
+        group.MapGet("/entities", ListEntitiesAsync);
 
         group.MapPost("/todo-completions", async (
             TodoCompletionRequest request,
@@ -52,6 +57,41 @@ public static class HomeAssistantEndpoints
         });
 
         return group;
+    }
+
+    private static async Task<IResult> ListEntitiesAsync(
+        IHomeAssistantClient client,
+        IOptions<HomeAssistantOptions> options,
+        ILoggerFactory loggerFactory,
+        CancellationToken cancellationToken)
+    {
+        if (options.Value.BaseUrl is null)
+        {
+            return Results.Ok(new HomeAssistantEntitiesResponse(false, []));
+        }
+
+        try
+        {
+            var entities = await client.GetEntitiesAsync(cancellationToken).ConfigureAwait(false);
+            return Results.Ok(new HomeAssistantEntitiesResponse(
+                true,
+                entities.Select(entity => new HomeAssistantEntityResponse(
+                    entity.EntityId,
+                    entity.Domain,
+                    entity.FriendlyName)).ToList()));
+        }
+        catch (Exception exception) when (exception is HomeAssistantRequestException or HttpRequestException or TaskCanceledException)
+        {
+            // A broken integration must never block manual entry in the settings screens.
+            ApiLog.HomeAssistantEntitiesFailed(
+                loggerFactory.CreateLogger("HomeDaemon.Api.Endpoints.HomeAssistantEndpoints"),
+                exception);
+
+            return Results.Problem(
+                statusCode: StatusCodes.Status502BadGateway,
+                title: "Home Assistant unavailable",
+                detail: "The Home Assistant entity list could not be loaded.");
+        }
     }
 
     private static async Task<Guid?> ResolvePlannedMemberAsync(IApplicationDbContext db, Guid choreId, CancellationToken cancellationToken)

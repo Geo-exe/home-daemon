@@ -16,15 +16,43 @@ export function formatMinor(amountMinor: number | null, currency: string, locale
 
 /**
  * Parses a user-typed amount into minor units. Accepts a dot or a comma as the decimal
- * separator and at most two decimals. Returns null when the text is not a valid amount.
+ * separator, an optional currency symbol and the usual thousands grouping (`1.234,56` or
+ * `1,234.56`). At most two decimals are allowed. Returns null when the text is not valid.
  */
 export function parseAmountToMinor(value: string): number | null {
-  const normalized = value.trim().replace(',', '.')
-  if (!/^\d+(\.\d{0,2})?$/.test(normalized)) {
+  const cleaned = value
+    .trim()
+    .replace(/[\s\u00a0]/g, '')
+    .replace(/[€$£]/g, '')
+
+  if (cleaned === '' || !/^\d+(?:[.,]\d+)*$/.test(cleaned)) {
     return null
   }
 
-  const [whole, fraction = ''] = normalized.split('.')
+  const lastComma = cleaned.lastIndexOf(',')
+  const lastDot = cleaned.lastIndexOf('.')
+  let whole: string
+  let fraction: string
+
+  if (lastComma >= 0 && lastDot >= 0) {
+    const decimalIndex = Math.max(lastComma, lastDot)
+    whole = cleaned.slice(0, decimalIndex).replace(/[.,]/g, '')
+    fraction = cleaned.slice(decimalIndex + 1)
+  } else {
+    const separatorIndex = Math.max(lastComma, lastDot)
+    if (separatorIndex < 0) {
+      whole = cleaned
+      fraction = ''
+    } else {
+      whole = cleaned.slice(0, separatorIndex)
+      fraction = cleaned.slice(separatorIndex + 1)
+    }
+  }
+
+  if (!/^\d+$/.test(whole) || !/^\d{0,2}$/.test(fraction)) {
+    return null
+  }
+
   const minor = Number(whole) * 100 + Number((fraction + '00').slice(0, 2))
   return Number.isSafeInteger(minor) ? minor : null
 }

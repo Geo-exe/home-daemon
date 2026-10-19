@@ -31,6 +31,9 @@ const BudgetIncomesPage = lazy(() =>
 const BudgetTransfersPage = lazy(() =>
   import('./pages/BudgetTransfersPage').then((module) => ({ default: module.BudgetTransfersPage })),
 )
+const BudgetImportPage = lazy(() =>
+  import('./pages/BudgetImportPage').then((module) => ({ default: module.BudgetImportPage })),
+)
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout').then((module) => ({ default: module.SettingsLayout })))
 const HouseholdSettingsPage = lazy(() =>
   import('./pages/settings/HouseholdSettingsPage').then((module) => ({ default: module.HouseholdSettingsPage })),
@@ -80,6 +83,7 @@ export function App() {
               <Route path="/budget/expenses/:expenseId" element={<BudgetExpenseFormPage />} />
               <Route path="/budget/incomes" element={<BudgetIncomesPage />} />
               <Route path="/budget/transfers" element={<BudgetTransfersPage />} />
+              <Route path="/budget/import" element={<BudgetImportPage />} />
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<Navigate to="/settings/household" replace />} />
                 <Route path="household" element={<HouseholdSettingsPage />} />

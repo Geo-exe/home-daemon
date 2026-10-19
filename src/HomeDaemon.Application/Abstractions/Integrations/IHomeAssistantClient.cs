@@ -7,6 +7,12 @@ namespace HomeDaemon.Application.Abstractions.Integrations;
 /// </summary>
 public interface IHomeAssistantClient
 {
+    /// <summary>
+    /// Lists the person, to-do and calendar entities the instance exposes, for the pickers in
+    /// the settings screens.
+    /// </summary>
+    Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesAsync(CancellationToken cancellationToken);
+
     Task<IReadOnlyList<HomeAssistantTodoItem>> GetTodoItemsAsync(string todoListEntityId, CancellationToken cancellationToken);
 
     Task<HomeAssistantTodoItem> CreateTodoItemAsync(string todoListEntityId, HomeAssistantTodoItemDraft draft, CancellationToken cancellationToken);

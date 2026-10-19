@@ -174,6 +174,19 @@ describe('BudgetExpenseFormPage', () => {
     expect(posted).toHaveLength(0)
   })
 
+  it('flags a malformed amount as soon as the field loses focus', async () => {
+    const { posted } = stubApi()
+    const actor = userEvent.setup()
+    renderForm()
+
+    const amount = await screen.findByLabelText('Amount')
+    await actor.type(amount, '12,3,4')
+    await actor.tab()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Enter an amount such as 12.50.')
+    expect(posted).toHaveLength(0)
+  })
+
   it('sends minor units, a null subcategory and a null description', async () => {
     const { posted } = stubApi()
     const actor = userEvent.setup()

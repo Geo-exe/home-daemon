@@ -1,3 +1,4 @@
+using HomeDaemon.Api.Auth;
 using HomeDaemon.Application.Budget;
 using HomeDaemon.Application.Households;
 
@@ -18,7 +19,16 @@ public static class BudgetEndpoints
         MapIncomes(group);
         MapExpenses(group);
         MapTransfers(group);
+        MapImports(group);
         return group;
+    }
+
+    private static void MapImports(RouteGroupBuilder group)
+    {
+        // A bulk import touches the whole household's history, so it is reserved for
+        // administrators even though ordinary expense writes are available to everyone.
+        group.MapPost("/imports", ImportExpensesAsync)
+            .RequireAuthorization(AccountRoles.AdminPolicy);
     }
 
     private static void MapSummary(RouteGroupBuilder group)
@@ -277,6 +287,38 @@ public static class BudgetEndpoints
         var household = await getHousehold.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
         await handler.HandleAsync(new DeleteBudgetExpenseCommand(household.Id, expenseId), cancellationToken).ConfigureAwait(false);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> ImportExpensesAsync(
+        ImportBudgetExpensesRequest request,
+        GetHouseholdHandler getHousehold,
+        ImportBudgetExpensesHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var household = await getHousehold.HandleAsync(new GetHouseholdQuery(), cancellationToken).ConfigureAwait(false);
+
+        var command = new ImportBudgetExpensesCommand(
+            household.Id,
+            (request.Rows ?? []).Select(row => new ImportBudgetExpenseRow(
+                row.Line,
+                row.Date,
+                row.AmountMinor,
+                row.Category,
+                row.Subcategory,
+                row.PaidByMemberId,
+                row.Description)).ToList(),
+            (request.Categories ?? []).Select(mapping => new ImportCategoryMapping(
+                mapping.SourceName,
+                mapping.CategoryId,
+                mapping.Create)).ToList(),
+            (request.Subcategories ?? []).Select(mapping => new ImportSubcategoryMapping(
+                mapping.CategorySourceName,
+                mapping.SourceName,
+                mapping.SubcategoryId,
+                mapping.Create)).ToList());
+
+        var result = await handler.HandleAsync(command, cancellationToken).ConfigureAwait(false);
+        return Results.Ok(new ImportBudgetExpensesResponse(result.Imported, result.Skipped));
     }
 
     private static async Task<IResult> ListTransfersAsync(

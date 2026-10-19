@@ -23,7 +23,12 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { errorMessageKey, fieldProblems } from '../lib/errors'
 import { formatCalendarDate, todayInTimeZone } from '../lib/format'
 import { formatMinor, minorToInputValue, parseAmountToMinor } from '../lib/money'
-import { budgetTransferFormSchema, issuesToFieldErrors, type BudgetTransferFormValues } from '../lib/validation'
+import {
+  amountValidationKey,
+  budgetTransferFormSchema,
+  issuesToFieldErrors,
+  type BudgetTransferFormValues,
+} from '../lib/validation'
 
 const pageSize = 50
 
@@ -235,6 +240,31 @@ function TransferDialog({
   const setField = <K extends keyof BudgetTransferFormValues>(key: K, value: BudgetTransferFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
 
+  const clearAmountError = () =>
+    setFieldErrors((current) => {
+      if (!current.amount) {
+        return current
+      }
+
+      const next = { ...current }
+      delete next.amount
+      return next
+    })
+
+  // Surface a malformed amount as soon as the field loses focus.
+  const validateAmount = () => {
+    const key = amountValidationKey(values.amount)
+    setFieldErrors((current) => {
+      const next = { ...current }
+      if (key) {
+        next.amount = key
+      } else {
+        delete next.amount
+      }
+      return next
+    })
+  }
+
   const handleSubmit = async () => {
     setErrorKey(null)
 
@@ -299,7 +329,11 @@ function TransferDialog({
             inputMode="decimal"
             placeholder="0.00"
             value={values.amount}
-            onChange={(event) => setField('amount', event.target.value)}
+            onChange={(event) => {
+              setField('amount', event.target.value)
+              clearAmountError()
+            }}
+            onBlur={validateAmount}
           />
         </Field>
 

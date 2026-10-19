@@ -16,6 +16,55 @@ public sealed class HttpHomeAssistantClient(HttpClient httpClient) : IHomeAssist
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
+    private static readonly HashSet<string> PickerDomains = new(StringComparer.Ordinal)
+    {
+        "person",
+        "todo",
+        "calendar",
+    };
+
+    public async Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesAsync(CancellationToken cancellationToken)
+    {
+        using var response = await SendAsync(HttpMethod.Get, "api/states", content: null, cancellationToken).ConfigureAwait(false);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        using var document = JsonDocument.Parse(json);
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new HomeAssistantRequestException("Home Assistant returned an unexpected state list.", isTransient: false);
+        }
+
+        var entities = new List<HomeAssistantEntity>();
+        foreach (var element in document.RootElement.EnumerateArray())
+        {
+            var entityId = GetString(element, "entity_id");
+            if (string.IsNullOrWhiteSpace(entityId))
+            {
+                continue;
+            }
+
+            var separator = entityId.IndexOf('.', StringComparison.Ordinal);
+            var domain = separator > 0 ? entityId[..separator] : string.Empty;
+            if (!PickerDomains.Contains(domain))
+            {
+                continue;
+            }
+
+            var friendlyName = element.TryGetProperty("attributes", out var attributes)
+                && attributes.ValueKind == JsonValueKind.Object
+                ? GetString(attributes, "friendly_name")
+                : null;
+
+            entities.Add(new HomeAssistantEntity(entityId, domain, friendlyName));
+        }
+
+        return entities
+            .OrderBy(entity => entity.Domain, StringComparer.Ordinal)
+            .ThenBy(entity => entity.FriendlyName ?? entity.EntityId, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(entity => entity.EntityId, StringComparer.Ordinal)
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<HomeAssistantTodoItem>> GetTodoItemsAsync(string todoListEntityId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(todoListEntityId);

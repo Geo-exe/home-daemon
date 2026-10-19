@@ -101,6 +101,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<GetBudgetExpensesHandler>();
         services.AddScoped<GetBudgetExpenseHandler>();
         services.AddScoped<CreateBudgetExpenseHandler>();
+        services.AddScoped<ImportBudgetExpensesHandler>();
         services.AddScoped<UpdateBudgetExpenseHandler>();
         services.AddScoped<DeleteBudgetExpenseHandler>();
 

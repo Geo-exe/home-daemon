@@ -126,14 +126,12 @@ describe('BudgetIncomesPage', () => {
     expect(puts).toHaveLength(0)
   })
 
-  it('marks the months that still have no income recorded', async () => {
+  it('does not flag months that still have no income recorded', async () => {
     stubApi()
     renderPage()
 
     const january = await screen.findByLabelText('January income')
-    const february = screen.getByLabelText('February income')
 
-    expect(january.closest('li')).toHaveClass('is-missing')
-    expect(february.closest('li')).not.toHaveClass('is-missing')
+    expect(january.closest('li')).not.toHaveClass('is-missing')
   })
 })
