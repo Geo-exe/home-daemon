@@ -26,6 +26,8 @@ public sealed class HttpHomeAssistantClient(
         "calendar",
     };
 
+    private static readonly string[] ErrorDetailProperties = ["message", "error", "detail", "title"];
+
     public Task<IReadOnlyList<HomeAssistantEntity>> GetEntitiesAsync(CancellationToken cancellationToken) =>
         TrackAsync("states.list", null, HttpMethod.Get.Method, () => GetEntitiesCoreAsync(cancellationToken), cancellationToken);
 
@@ -108,7 +110,7 @@ public sealed class HttpHomeAssistantClient(
             ["entity_id"] = todoListEntityId,
             ["item"] = draft.Summary,
         };
-        AddOptionalFields(body, draft, includeRename: false);
+        AddOptionalFields(body, draft, includeRename: false, includeStatus: false);
 
         using var response = await PostServiceAsync("todo/add_item", body, returnResponse: false, cancellationToken).ConfigureAwait(false);
 
@@ -148,7 +150,7 @@ public sealed class HttpHomeAssistantClient(
             ["entity_id"] = todoListEntityId,
             ["item"] = itemUid,
         };
-        AddOptionalFields(body, draft, includeRename: true);
+        AddOptionalFields(body, draft, includeRename: true, includeStatus: true);
 
         using var response = await PostServiceAsync("todo/update_item", body, returnResponse: false, cancellationToken).ConfigureAwait(false);
     }
@@ -219,7 +221,11 @@ public sealed class HttpHomeAssistantClient(
         return events;
     }
 
-    private static void AddOptionalFields(Dictionary<string, object?> body, HomeAssistantTodoItemDraft draft, bool includeRename)
+    private static void AddOptionalFields(
+        Dictionary<string, object?> body,
+        HomeAssistantTodoItemDraft draft,
+        bool includeRename,
+        bool includeStatus)
     {
         if (includeRename)
         {
@@ -236,7 +242,13 @@ public sealed class HttpHomeAssistantClient(
             body["due_date"] = FormatDate(dueDate);
         }
 
-        body["status"] = draft.Status == HomeAssistantTodoStatus.Completed ? "completed" : "needs_action";
+        // todo.add_item does not accept status (Home Assistant always creates the item as
+        // needs_action and rejects the whole call with a 400 if the field is present).
+        // todo.update_item does accept it, so only that path sends it.
+        if (includeStatus)
+        {
+            body["status"] = draft.Status == HomeAssistantTodoStatus.Completed ? "completed" : "needs_action";
+        }
     }
 
     /// <summary>
@@ -352,9 +364,17 @@ public sealed class HttpHomeAssistantClient(
         if (!response.IsSuccessStatusCode)
         {
             var status = response.StatusCode;
+            var detail = await ReadErrorDetailAsync(response, cancellationToken).ConfigureAwait(false);
             response.Dispose();
+
+            var message = $"Home Assistant returned {((int)status).ToString(CultureInfo.InvariantCulture)} for '{uri}'.";
+            if (detail is not null)
+            {
+                message = $"{message} Detail: {detail}";
+            }
+
             throw new HomeAssistantRequestException(
-                $"Home Assistant returned {((int)status).ToString(CultureInfo.InvariantCulture)} for '{uri}'.",
+                message,
                 isTransient: status is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests || (int)status >= 500)
             {
                 StatusCode = (int)status,
@@ -362,6 +382,71 @@ public sealed class HttpHomeAssistantClient(
         }
 
         return response;
+    }
+
+    /// <summary>
+    /// Home Assistant explains rejected service calls in the response body. Only a short,
+    /// flattened message is kept: it is useful for diagnosis and never includes our request
+    /// headers or the machine token.
+    /// </summary>
+    private static async Task<string?> ReadErrorDetailAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        string body;
+        try
+        {
+            body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is IOException or HttpRequestException)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        string? detail = null;
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            if (document.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var propertyName in ErrorDetailProperties)
+                {
+                    if (document.RootElement.TryGetProperty(propertyName, out var property)
+                        && property.ValueKind == JsonValueKind.String)
+                    {
+                        detail = property.GetString();
+                        break;
+                    }
+                }
+
+                if (detail is null
+                    && document.RootElement.TryGetProperty("errors", out var errors))
+                {
+                    detail = errors.GetRawText();
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Not JSON: fall back to a short excerpt of the raw body.
+        }
+
+        return SanitizeErrorDetail(detail ?? body);
+    }
+
+    private static string? SanitizeErrorDetail(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        const int maxLength = 400;
+        var flattened = string.Join(' ', value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return flattened.Length <= maxLength ? flattened : flattened[..maxLength];
     }
 
     private static List<HomeAssistantTodoItem> ParseItems(string json, string todoListEntityId)
